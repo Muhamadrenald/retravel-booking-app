@@ -69,7 +69,7 @@ const Navbar = () => {
     >
       <div className="w-full h-full flex items-center justify-between">
         {/* Logo Section */}
-        <Link to="/" className="text-4xl text-red-500 font-bold">
+        <Link to="/" className="text-4xl text-primary font-bold">
           ReTravel
         </Link>
 
@@ -95,7 +95,7 @@ const Navbar = () => {
               <li key={index}>
                 <Link
                   to={item.link}
-                  className="hover:text-red-500 ease-in-out duration-300"
+                  className="hover:text-primary ease-in-out duration-300"
                 >
                   {item.label}
                 </Link>
@@ -105,7 +105,7 @@ const Navbar = () => {
 
           {/* Button */}
           <div className="flex items-center justify-center">
-            <button className="md:w-fit w-full md:px-4 px-6 md:py-1 py-2.5 bg-red-500 border border-red-500 hover:bg-transparent hover:border-red-500 md:rounded-full rounded-xl font-normal text-neutral-50 hover:text-red-500 ease-in-out duration-300">
+            <button className="md:w-fit w-full md:px-4 px-6 md:py-1 py-2.5 bg-primary border border-primary hover:bg-transparent hover:border-primary md:rounded-full rounded-xl font-normal text-neutral-50 hover:text-primary ease-in-out duration-300">
               Sign In
             </button>
           </div>
