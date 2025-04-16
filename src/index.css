@@ -16,4 +16,6 @@
 
 @theme {
   --font-inter: "Inter", sans-serif;
+
+  --color-primary: #f50a0a;
 }
