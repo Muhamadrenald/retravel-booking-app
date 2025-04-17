@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# my file
+Hero copy.jsx
+
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
