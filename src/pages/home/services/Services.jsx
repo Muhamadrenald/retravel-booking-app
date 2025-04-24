@@ -1,5 +1,5 @@
 import React from "react";
-import RootLayout from "../../../layout/RootLayout";
+import RootLayout from "../../../layouts/RootLayout";
 import ServiceCard from "../../../components/service/ServiceCard";
 import { RiRefund2Line, RiSecurePaymentLine } from "react-icons/ri";
 import { PiHeadsetFill } from "react-icons/pi";

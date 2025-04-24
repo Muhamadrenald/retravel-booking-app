@@ -1,10 +1,13 @@
 import React from "react";
-import TopLayout from "../../../layout/toppage/TopLayout";
-import RootLayout from "../../../layout/RootLayout";
+import TopLayout from "../../../layouts/toppage/TopLayout";
+import RootLayout from "../../../layouts/RootLayout";
 import { Link } from "react-router-dom";
 import WarningAlert from "../../../components/alertmessage/WarningAlert";
 import BusSeat from "./seat/busseat/BusSeat";
 import ToggleBtn from "../../../components/togglebtn/ToggleBtn";
+import Amenities from "./amenities/Amenities";
+import ReservationPolicy from "./reservationpolicy/ReservationPolicy";
+import BusImage from "./busimage/BusImage";
 
 const Detail = () => {
   // show the warning message box
@@ -13,8 +16,8 @@ const Detail = () => {
       One individual only can book 10 seats. If you want to book more than 10
       seats, Please{" "}
       <Link to={"/support-team"} className="text-yellow-700 font-medium">
-        Contact our support team.
-      </Link>{" "}
+        Contact our support team
+      </Link>
       .
     </>
   );
@@ -56,20 +59,23 @@ const Detail = () => {
           {/* Button */}
           <div className="w-full flex items-center justify-center gap-6 flex-col">
             <ToggleBtn
-              buttonText={"Se Bus Details"}
+              buttonText={"See Bus Details"}
               buttonTextHidden={"Hide Bus Details"}
-            />
+            >
+              <div className="w-full space-y-10">
+                {/* reservation policy and amenities */}
+                <div className="w-full grid grid-cols-7 gap-20">
+                  {/* Amenities */}
+                  <Amenities />
 
-            <div className="w-full space-y-10">
-              {/* reservation policy and amenities */}
-              <div className="w-full grid grid-cols-7 gap-20">
-                {/* Amenities */}
+                  {/* Reservation Policy */}
+                  <ReservationPolicy />
+                </div>
 
-                {/* Reservation Policy */}
+                {/* bus images */}
+                <BusImage />
               </div>
-
-              {/* bus images */}
-            </div>
+            </ToggleBtn>
           </div>
         </div>
       </RootLayout>

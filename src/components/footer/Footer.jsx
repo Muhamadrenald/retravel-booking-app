@@ -1,5 +1,5 @@
 import React from "react";
-import RootLayout from "../../layout/RootLayout";
+import RootLayout from "../../layouts/RootLayout";
 import { Link } from "react-router-dom";
 import {
   FaFacebook,

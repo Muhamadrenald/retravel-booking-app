@@ -1,6 +1,6 @@
 import React from "react";
-import TopLayout from "../../../layout/toppage/TopLayout";
-import RootLayout from "../../../layout/RootLayout";
+import TopLayout from "../../../layouts/toppage/TopLayout";
+import RootLayout from "../../../layouts/RootLayout";
 import PassengerData from "./passengerdata/PassengerData";
 import BookingStatus from "./bookingstatus/BookingStatus";
 

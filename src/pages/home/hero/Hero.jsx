@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import RootLayout from "../../../layout/RootLayout";
+import RootLayout from "../../../layouts/RootLayout";
 import Search from "./search/Search";
 
 const Hero = () => {

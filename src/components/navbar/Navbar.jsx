@@ -20,7 +20,7 @@ const Navbar = () => {
     },
     {
       label: "Tickets",
-      link: "/tickets",
+      link: "/bus-tickets",
     },
     {
       label: "About",
@@ -105,8 +105,8 @@ const Navbar = () => {
 
           {/* Button */}
           <div className="flex items-center justify-center">
-            <button className="md:w-fit w-full md:px-4 px-6 md:py-1 py-2.5 bg-primary border border-primary hover:bg-transparent hover:border-primary md:rounded-full rounded-xl font-normal text-neutral-50 hover:text-primary ease-in-out duration-300">
-              Sign In
+            <button className="md:w-fit w-full md:px-4 px-6 md:py-1 py-2.5 bg-primary border border-primary hover:bg-transparent hover:border-primary md:rounded-full rounded-xl font-normal text-neutral-50 hover:text-primary ease-in-out duration-300 cursor-pointer">
+              <Link to="/login">Login</Link>
             </button>
           </div>
         </div>

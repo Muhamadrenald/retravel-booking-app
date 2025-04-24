@@ -65,7 +65,7 @@ const PassengerData = () => {
           />
         </div>
 
-        <div className="w-full space-y-2">
+        {/* <div className="w-full space-y-2">
           <label className="text-sm text-neutral-500 font-medium">
             Pickup Station
           </label>
@@ -79,7 +79,7 @@ const PassengerData = () => {
             <option value="kasihan">Kasihan</option>
             <option value="kalasan">Kalasan</option>
           </select>
-        </div>
+        </div> */}
       </div>
 
       {/* Payment method */}

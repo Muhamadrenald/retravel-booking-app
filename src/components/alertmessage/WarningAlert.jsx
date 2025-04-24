@@ -21,7 +21,7 @@ const WarningAlert = ({ message }) => {
 
       <button
         onClick={handleClose}
-        className="ml-4 text-primary hover:text-primary/90"
+        className="ml-4 text-primary hover:text-primary/90 cursor-pointer"
         aria-label="Close"
       >
         <FaX className="w-3 h-3" />
