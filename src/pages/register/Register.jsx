@@ -4,10 +4,11 @@ import {
   FaRegEye,
   FaRegEyeSlash,
   FaPhone,
+  FaUsersCog,
 } from "react-icons/fa";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./index.css"; // Import file CSS
+import "./index.css";
 import useAuthAPI from "../../hooks/useAuthAPI";
 
 const Register = () => {
@@ -21,6 +22,7 @@ const Register = () => {
   const [passwordRepeat, setPasswordRepeat] = useState("");
   const [passwordRepeatError, setPasswordRepeatError] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [role, setRole] = useState("user"); // Default role to "user"
   const navigate = useNavigate();
 
   // Gunakan custom hook untuk API
@@ -97,7 +99,7 @@ const Register = () => {
       return;
     }
 
-    // Membuat objek data pengguna
+    // Membuat objek data pengguna dengan role
     const userData = {
       name,
       email,
@@ -106,6 +108,7 @@ const Register = () => {
       phoneNumber: phoneNumber || "+628123456789",
       profilePictureUrl:
         "https://ui-avatars.com/api/?name=" + encodeURIComponent(name),
+      role, // Tambahkan role ke data registrasi
     };
 
     // Panggil fungsi register dari custom hook
@@ -185,6 +188,27 @@ const Register = () => {
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 disabled={isLoading}
               />
+            </div>
+          </div>
+
+          {/* Role Selection */}
+          <div className="flex flex-col w-full">
+            <div className="flex items-center w-full gap-2 p-2 bg-gray-800 rounded-xl">
+              <FaUsersCog />
+              <select
+                className="w-full text-sm bg-transparent border-0 outline-none md:text-base"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                disabled={isLoading}
+                required
+              >
+                <option value="user" className="bg-gray-800">
+                  User
+                </option>
+                <option value="admin" className="bg-gray-800">
+                  Admin
+                </option>
+              </select>
             </div>
           </div>
 

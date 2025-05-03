@@ -1,3 +1,4 @@
+// Di App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/home/Home";
@@ -13,35 +14,40 @@ import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Activities from "./pages/activities/Activities";
+import Promo from "./pages/promo/Promo";
+import ActivityDetail from "./pages/activitydetail/ActivityDetail";
+import Categories from "./pages/categories/Categories";
+import { CartProvider } from "./contexts/CartContext"; // Pastikan CartProvider diimpor
+import Cart from "./pages/cart/Cart";
 
 const App = () => {
   return (
-    <>
+    <CartProvider>
       <Router>
         <Routes>
-          {/* Auth routes - tanpa navbar dan footer */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Route>
-
-          {/* Main routes - dengan navbar dan footer */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/activities/:id" element={<ActivityDetail />} />
+            <Route path="/promo" element={<Promo />} />
+            <Route path="/promos/:promoId" element={<Promo />} />
+            <Route path="/carts" element={<Cart />} />
             <Route path="/bus-tickets" element={<Ticket />} />
             <Route path="/bus-tickets/detail" element={<Detail />} />
             <Route path="/bus-tickets/payment" element={<Invoice />} />
-
-            {/* Protected Route */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/bus-tickets/checkout" element={<Checkout />} />
             </Route>
           </Route>
         </Routes>
-        <ToastContainer /> {/* Untuk react-toastify */}
+        <ToastContainer />
       </Router>
-    </>
+    </CartProvider>
   );
 };
 

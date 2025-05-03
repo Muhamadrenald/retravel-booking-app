@@ -44,7 +44,7 @@ const Search = () => {
     >
       <div className="w-full flex flex-col md:flex-row items-start gap-5">
         {/* From and to input section */}
-        <div className="w-full md:w-1/2 flex items-start gap-5 relative">
+        <div className="w-full md:w-1/2 flex items-start gap-2 relative">
           {/* From with label */}
           <div className="w-1/2 flex flex-col items-start">
             <div className="text-sm font-medium text-neutral-700 mb-1 text-left">

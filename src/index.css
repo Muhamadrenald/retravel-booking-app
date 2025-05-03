@@ -108,3 +108,28 @@
   pointer-events: all;
   position: relative;
 }
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: #ffffff !important;
+  background-color: #f50a0a;
+  border-radius: 9999px;
+  width: 50px !important;
+  height: 50px !important;
+  font-size: 16px; /* ukuran ikon panah */
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease;
+  padding: 0; /* jangan ada padding */
+  margin: 20px 20px;
+  top: 44% !important;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  background-color: transparent;
+  border: 3px solid#f50a0a;
+}

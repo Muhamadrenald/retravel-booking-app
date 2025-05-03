@@ -7,8 +7,8 @@ const MainLayout = () => {
   return (
     <>
       <Navbar />
-      {/* <div className="min-h-screen pt-[8ch]"> */}
-      <div className="min-h-screen">
+      <div className="min-h-screen pt-[8ch]">
+        {/* <div className="min-h-screen"> */}
         <Outlet />
       </div>
       <Footer />

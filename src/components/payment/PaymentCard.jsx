@@ -26,7 +26,6 @@ const PaymentCard = ({
               className="w-full h-full object-contain object-center rounded-lg"
             />
           </div>
-
           <div className="space-y-0.5">
             <h1 className="text-base text-neutral-600 font-medium">
               {cardholderName}
@@ -36,7 +35,6 @@ const PaymentCard = ({
             </p>
           </div>
         </div>
-
         <div className="flex items-center justify-center">
           {selectedPayment === value ? (
             <IoMdRadioButtonOn className="w-7 h-7 text-indigo-500" />
@@ -45,7 +43,6 @@ const PaymentCard = ({
           )}
         </div>
       </div>
-
       {/* radio button */}
       <input
         type="radio"
