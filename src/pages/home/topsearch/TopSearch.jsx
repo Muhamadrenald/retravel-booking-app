@@ -4,16 +4,16 @@ import TopSearchCard from "../../../components/topsearch/TopSearchCard";
 
 const TopSearch = () => {
   return (
-    <RootLayout className="space-y-12">
+    <RootLayout className="space-y-8 md:space-y-12 px-4 md:px-0">
       {/* Tag */}
       <div className="w-full flex items-center justify-center text-center">
-        <h1 className="text-3xl text-neutral-800 font-bold">
+        <h1 className="text-2xl md:text-3xl text-neutral-800 font-bold">
           Top Search <span className="text-primary">Routes</span>
         </h1>
       </div>
 
       {/* Top Search tickets routes Card */}
-      <div className="w-full grid grid-cols-3 gap-5">
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
         <TopSearchCard
           routeFrom={"Jakarta"}
           routeTo={"Yogyakarta"}

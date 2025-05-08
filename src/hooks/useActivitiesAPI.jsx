@@ -1,4 +1,3 @@
-// src/hooks/useActivitiesAPI.js
 import { useState } from "react";
 import apiClient from "../api/axiosInstance";
 import { API_CONFIG } from "../api/config";

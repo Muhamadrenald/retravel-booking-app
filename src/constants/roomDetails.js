@@ -1,46 +1,45 @@
 export const ROOM_DETAILS = {
-  // Informasi Kamar
-  roomSize: "60 m²/646 ft²",
-  bedType: "1 Kasur king size",
-  view: "Sungai",
+  // Informasi Umum
+  size: "Standard size",
+  view: "Scenic view",
 
-  // Fasilitas Kamar
-  facilities: [
-    { label: "Termasuk sarapan", status: "positive" },
-    { label: "Tidak bisa refund (Harap buruan!)", status: "negative" },
-    { label: "Pesan dan bayar sekarang", status: "positive" },
-    { label: "WiFi Gratis", status: "positive" },
+  // Fitur Aktivitas
+  features: [
+    { label: "Includes basic package", status: "positive" },
+    { label: "Non-refundable (Act quickly!)", status: "negative" },
+    { label: "Book and pay now", status: "positive" },
+    { label: "Free WiFi", status: "positive" },
   ],
 
   // Promosi
   promotion: {
-    title: "Harga termurah di sini!",
+    title: "Best Price Guaranteed!",
     items: [
-      "Pembatalan gratis sebelum 6 Mei 2025",
-      "Tidak bayar apa pun sampai 4 Mei 2025",
-      "Parkir",
-      "WiFi Gratis",
+      "Free cancellation before May 6, 2025",
+      "No payment until May 4, 2025",
+      "Free parking",
+      "Free WiFi",
     ],
   },
 
   // Keterangan
   labels: {
-    cashback: "Imbalan cashback:",
-    taxNote: "Tunduk pada pajak kenaikan",
-    pricePerNight: "Per malam sebelum biaya lainnya",
-    bookingTime: "Hanya butuh 2 menit!!",
-    lastRoom: "Kamar terakhir",
-    noRisk: "TANPA RISIKO! Pembatalan gratis",
+    cashback: "Cashback Reward:",
+    taxNote: "Subject to applicable taxes",
+    pricePerUnit: "Per unit before additional fees",
+    bookingTime: "Takes only 2 minutes!",
+    lastItem: "Last Available Item",
+    noRisk: "RISK-FREE! Free cancellation",
   },
 
   // Rating
   rating: {
-    label: "Kennyaman & kualitas kamar",
-    value: "Spektakuler 9.8",
+    label: "Quality & Experience",
+    value: "Excellent 9.8",
   },
 
   // Tombol
   buttons: {
-    viewDetails: "Lihat foto dan informasi",
+    viewDetails: "View Details & Photos",
   },
 };

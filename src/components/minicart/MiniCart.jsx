@@ -1,4 +1,3 @@
-// src/components/cart/MiniCart.jsx
 import { useState } from "react";
 import { ShoppingCart, X, ChevronRight } from "lucide-react";
 import { useCart } from "../../contexts/CartContext";

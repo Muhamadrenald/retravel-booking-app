@@ -1,112 +1,109 @@
-// activityConstants.js - Extracted constants from ActivityDetail
+// activityConstants.js - Constants for ActivityDetail
 
-export const FACILITY_ICONS = [
-  { icon: "🍽️", name: "Hidangan & restoran" },
-  { icon: "👍", name: "Pas untuk aktivitas" },
-  { icon: "🏊‍♂️", name: "Kolam renang" },
-  { icon: "🏞️", name: "Pemandangan luar biasa" },
-  { icon: "🧼", name: "Bersih & higienis" },
-];
+export const ACTIVITY_TYPES = {
+  attraction: "Attraction",
+  tour: "Guided Tour",
+  event: "Event",
+  workshop: "Workshop",
+  adventure: "Adventure",
+};
 
-export const STAYCATION_OFFERS = [
+export const ACTIVITY_HIGHLIGHTS = [
   {
-    icon: "🍽️",
-    title: "Makanan & Minuman",
-    facilities: ["Layanan kamar 24 jam", "Kedai kopi", "Restoran"],
+    icon: "🎟️",
+    title: "Activity Access",
+    items: ["Entry ticket", "Priority access", "Exclusive areas"],
   },
   {
-    icon: "💆‍♀️",
-    title: "Wellness",
-    facilities: ["Salon", "Pusat kebugaran", "Spa"],
+    icon: "🗺️",
+    title: "Guided Experience",
+    items: [
+      "Professional guide",
+      "Multilingual support",
+      "Interactive sessions",
+    ],
   },
   {
-    icon: "🏋️‍♂️",
-    title: "Aktivitas",
-    facilities: ["Area bermain anak", "Kolam renang", "Taman"],
+    icon: "🎉",
+    title: "Special Perks",
+    items: ["Souvenir", "Refreshments", "Photo opportunities"],
   },
 ];
 
 export const LANDMARK_LIST = [
-  { name: "Istana Yogyakarta", distance: "7.4 km" },
+  { name: "Yogyakarta Palace", distance: "7.4 km" },
   { name: "Taman Sari", distance: "7.8 km" },
-  { name: "Ballet Ramayana di Prambanan", distance: "12.7 km" },
-  { name: "Candi Ratu Boko", distance: "13.0 km" },
-  { name: "Candi Sewu", distance: "13.2 km" },
+  { name: "Prambanan Temple", distance: "12.7 km" },
+  { name: "Ratu Boko Temple", distance: "13.0 km" },
+  { name: "Sewu Temple", distance: "13.2 km" },
 ];
 
-export const ALL_FACILITIES = [
-  { icon: "📶", name: "Wifi gratis" },
-  { icon: "🅿️", name: "Parkir gratis" },
-  { icon: "🏊‍♂️", name: "Kolam renang" },
-  { icon: "🧘‍♀️", name: "Spa" },
-  { icon: "🛎️", name: "Resepsionis 24 jam" },
-  { icon: "🏋️‍♂️", name: "Pusat kebugaran" },
-  { icon: "🍽️", name: "Restoran" },
-  { icon: "🍸", name: "Bar" },
+export const ALL_FEATURES = [
+  { icon: "🎟️", name: "Entry Ticket" },
+  { icon: "🗣️", name: "Guided Tour" },
+  { icon: "📷", name: "Photo Spots" },
+  { icon: "🍴", name: "Dining Options" },
+  { icon: "♿", name: "Accessibility" },
+  { icon: "🛍️", name: "Souvenir Shop" },
+  { icon: "🅿️", name: "Parking" },
+  { icon: "🚻", name: "Restrooms" },
 ];
 
 export const NAVIGATION_TABS = [
-  { id: "information", name: "Informasi Umum" },
-  { id: "facilities", name: "Fasilitas" },
-  { id: "location", name: "Lokasi" },
-  { id: "reviews", name: "Ulasan" },
+  { id: "overview", name: "Overview" },
+  { id: "features", name: "Features" },
+  { id: "location", name: "Location" },
+  { id: "reviews", name: "Reviews" },
 ];
 
 export const SAMPLE_REVIEWS = [
   {
-    name: "Pengunjung 1",
+    name: "Traveler 1",
     rating: 4.5,
     comment:
-      "Tempat yang sangat bagus untuk liburan. Pemandangan indah, fasilitas lengkap, dan pelayanan ramah.",
+      "Amazing experience! The guided tour was very informative, and the views were stunning.",
     date: "April 2025",
   },
   {
-    name: "Pengunjung 2",
+    name: "Traveler 2",
     rating: 4.8,
     comment:
-      "Sangat merekomendasikan tempat ini! Suasana yang tenang dan nyaman, cocok untuk relaksasi.",
+      "Loved every moment of this activity. Perfect for families and solo travelers!",
     date: "April 2025",
   },
   {
-    name: "Pengunjung 3",
+    name: "Traveler 3",
     rating: 4.2,
     comment:
-      "Fasilitas lengkap dan pemandangan yang indah. Saya akan kembali lagi di lain waktu.",
-    date: "Maret 2025",
+      "Worth the price. The staff were friendly, and the activity was well-organized.",
+    date: "March 2025",
   },
   {
-    name: "Pengunjung 4",
+    name: "Traveler 4",
     rating: 4.7,
     comment:
-      "Pelayanan ramah dan profesional. Lokasi strategis dekat dengan berbagai tempat wisata.",
-    date: "Maret 2025",
+      "A must-try when visiting! The experience was seamless from start to finish.",
+    date: "March 2025",
   },
 ];
 
-// Function to get facility icon
-export const getFacilityIcon = (facilityName) => {
+// Function to get feature icon
+export const getFeatureIcon = (featureName) => {
   const iconMap = {
-    wifi: "📶",
+    ticket: "🎟️",
+    tour: "🗣️",
+    photo: "📷",
+    dining: "🍴",
+    accessibility: "♿",
+    shop: "🛍️",
     parking: "🅿️",
-    pool: "🏊‍♂️",
-    restaurant: "🍽️",
-    gym: "💪",
-    spa: "💆‍♀️",
-    ac: "❄️",
-    bar: "🍸",
-    laundry: "👕",
-    garden: "🌳",
-    playground: "🧒",
-    elevator: "🛗",
-    security: "👮‍♂️",
-    concierge: "🛎️",
-    roomservice: "🛏️",
-    conference: "👥",
+    restroom: "🚻",
+    guide: "🗺️",
+    souvenir: "🎁",
+    priority: "⚡",
+    interactive: "🎮",
   };
 
-  // Try to match facility name (case insensitive) with our icon map
-  const key = facilityName
-    ? facilityName.toLowerCase().replace(/\s+/g, "")
-    : "";
-  return iconMap[key] || "✅"; // Default to checkmark if no icon found
+  const key = featureName ? featureName.toLowerCase().replace(/\s+/g, "") : "";
+  return iconMap[key] || "✅";
 };

@@ -24,16 +24,14 @@ export const useCartAPI = () => {
       console.log(`Increasing quantity for cartId: ${itemId}`);
       const item = cartItems.find((item) => item.id === itemId);
       if (!item) {
-        console.warn(
-          `Item dengan cartId ${itemId} tidak ditemukan di cartItems`
-        );
-        throw new Error("Item tidak ditemukan di keranjang");
+        console.warn(`Item with cartId ${itemId} not found in cartItems`);
+        throw new Error("Item not found in cart");
       }
       return updateCart(item.id, {
         quantity: (item.quantity || 1) + 1,
       });
     } catch (error) {
-      console.error("Error meningkatkan kuantitas:", error);
+      console.error("Error increasing quantity:", error);
       throw error;
     }
   };
@@ -43,10 +41,8 @@ export const useCartAPI = () => {
       console.log(`Decreasing quantity for cartId: ${itemId}`);
       const item = cartItems.find((item) => item.id === itemId);
       if (!item) {
-        console.warn(
-          `Item dengan cartId ${itemId} tidak ditemukan di cartItems`
-        );
-        throw new Error("Item tidak ditemukan di keranjang");
+        console.warn(`Item with cartId ${itemId} not found in cartItems`);
+        throw new Error("Item not found in cart");
       }
       if (item.quantity <= 1) {
         return removeFromCart(item.id);
@@ -55,7 +51,7 @@ export const useCartAPI = () => {
         quantity: item.quantity - 1,
       });
     } catch (error) {
-      console.error("Error mengurangi kuantitas:", error);
+      console.error("Error decreasing quantity:", error);
       throw error;
     }
   };

@@ -1,4 +1,3 @@
-// src/services/cartService.js
 import axios from "axios";
 import { API_CONFIG } from "../api/config";
 

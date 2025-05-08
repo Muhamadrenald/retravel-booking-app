@@ -1,6 +1,5 @@
 /* Always keep this at the top otherwise it won't work */
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
-
 @import "tailwindcss";
 
 * {
@@ -10,32 +9,41 @@
   font-family: "Inter", sans-serif;
 }
 
+html,
+body {
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  max-width: 100%;
+}
+
 ::-webkit-scrollbar {
   display: none;
 }
 
 @theme {
   --font-inter: "Inter", sans-serif;
-
   --color-primary: #f50a0a;
+}
+
+/* Container to constrain content width */
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow-x: hidden;
 }
 
 /* CSS for styling the price range slider */
 .slider {
   position: relative;
-}
-
-.track-slider,
-.range-slider,
-.slider-left-val,
-.slider-right-value {
-  position: absolute;
+  width: 100%;
 }
 
 .track-slider,
 .range-slider {
   border-radius: 4px;
   height: 6px;
+  width: 100%;
 }
 
 .track-slider {
@@ -67,6 +75,7 @@
   position: absolute;
   height: 0;
   outline: none;
+  width: 100%;
 }
 
 .thumb-left {
@@ -78,10 +87,8 @@
 }
 
 .thumb::-webkit-slider-thumb {
-  /* background-color: #0a0a0a; */
   background-color: #fff;
   border-radius: 50%;
-  /* box-shadow: 0 0 1px 1px #f50707; */
   border: 4px solid #ff0303;
   cursor: pointer;
   height: 28px;
@@ -99,7 +106,6 @@
 .thumb::-moz-range-thumb {
   background-color: #0a0a0a;
   border-radius: 50%;
-  /* box-shadow: 0 0 1px 1px #f50707; */
   border: 4px solid #ff0303;
   cursor: pointer;
   height: 28px;
@@ -109,27 +115,97 @@
   position: relative;
 }
 
+/* Responsive styling for banner and form elements */
+.banner-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.form-input {
+  width: 100%;
+}
+
+/* Base styles for both desktop and mobile */
 .swiper-button-next,
 .swiper-button-prev {
   color: #ffffff !important;
   background-color: #f50a0a;
-  border-radius: 9999px;
-  width: 50px !important;
-  height: 50px !important;
-  font-size: 16px; /* ukuran ikon panah */
-  line-height: 1;
+  border-radius: 50%;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-sizing: border-box;
-  transition: background-color 0.3s ease;
-  padding: 0; /* jangan ada padding */
-  margin: 20px 20px;
-  top: 44% !important;
+  transition: all 0.3s ease;
+  margin: 0;
+  top: 50% !important;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+/* Arrow icon sizing */
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  font-size: 14px !important;
+  font-weight: bold;
+}
+
+/* Hover effects */
 .swiper-button-next:hover,
 .swiper-button-prev:hover {
   background-color: transparent;
-  border: 3px solid#f50a0a;
+  border: 2px solid #f50a0a;
+  color: #f50a0a !important;
+  transform: translateY(-50%) scale(1.05);
+}
+
+/* Position adjustments */
+.swiper-button-prev {
+  left: 10px !important;
+}
+
+.swiper-button-next {
+  right: 10px !important;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .swiper-button-next,
+  .swiper-button-prev {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .swiper-button-next::after,
+  .swiper-button-prev::after {
+    font-size: 16px !important;
+  }
+
+  .swiper-button-prev {
+    left: 20px !important;
+  }
+
+  .swiper-button-next {
+    right: 20px !important;
+  }
+}
+
+/* Very small devices */
+@media (max-width: 400px) {
+  .swiper-button-next,
+  .swiper-button-prev {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .swiper-button-next::after,
+  .swiper-button-prev::after {
+    font-size: 12px !important;
+  }
 }

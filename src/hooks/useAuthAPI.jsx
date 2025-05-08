@@ -1,11 +1,71 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
+import { useNavigate, useLocation } from "react-router-dom";
 import apiClient from "../api/axiosInstance";
 import { API_CONFIG } from "../api/config";
 
 const useAuthAPI = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Daftar rute publik yang tidak memerlukan redirect
+  const publicRoutes = [
+    "/",
+    "/services",
+    "/categories",
+    "/activities",
+    "/promo",
+    "/about",
+    "/cart",
+    "/carts",
+    "/transaction",
+    "/bus-tickets",
+    "/train-tickets",
+    "/plane-tickets",
+    "/login",
+    "/register",
+    "/checkout",
+  ];
+
+  // Function to redirect based on user role
+  const redirectBasedOnRole = (userData) => {
+    if (!userData) {
+      console.log("No user data, redirecting to /login");
+      navigate("/login");
+      return;
+    }
+
+    const role = userData.role?.toLowerCase() || "user";
+    console.log(
+      "Redirecting based on role:",
+      role,
+      "Current path:",
+      location.pathname
+    );
+
+    // Jangan redirect jika di rute publik dan bukan /login
+    if (
+      publicRoutes.includes(location.pathname) &&
+      location.pathname !== "/login"
+    ) {
+      console.log(
+        "Skipping redirect: Current path is public",
+        location.pathname
+      );
+      return;
+    }
+
+    // Redirect berdasarkan role
+    if (role === "admin") {
+      console.log("Redirecting admin to /admin");
+      navigate("/admin");
+    } else {
+      console.log("Redirecting user to /");
+      navigate("/");
+    }
+  };
 
   // Function to get user data from API
   const fetchCurrentUser = useCallback(async () => {
@@ -17,11 +77,11 @@ const useAuthAPI = () => {
 
     setIsLoading(true);
     try {
-      console.log(
-        "Fetching user profile from:",
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CURRENT_USER}`
-      );
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.CURRENT_USER, {
+      const endpoint = API_CONFIG.ENDPOINTS.CURRENT_USER;
+      const fullUrl = `${API_CONFIG.BASE_URL}${endpoint}`;
+      console.log("Fetching user profile from:", fullUrl);
+
+      const response = await apiClient.get(endpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
           apiKey: API_CONFIG.API_KEY,
@@ -31,16 +91,16 @@ const useAuthAPI = () => {
 
       console.log("User profile response:", response.data);
 
-      if (response.data.code === "200") {
+      if (response.data.code === "200" && response.data.data) {
         const userData = response.data.data;
         setUser(userData);
 
-        // Update localStorage with fresh user data
         localStorage.setItem(
           "userData",
           JSON.stringify({
-            name: userData.name,
-            email: userData.email,
+            name: userData.name || "",
+            email: userData.email || "",
+            role: userData.role || "user",
           })
         );
 
@@ -57,19 +117,15 @@ const useAuthAPI = () => {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
-        axiosError: error.isAxiosError ? error.toJSON() : null,
       });
 
-      // If 401 unauthorized, remove token
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("userData");
         toast.error("Session expired. Please log in again.", {
           position: "top-right",
         });
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 1000);
+        navigate("/login");
       } else if (error.response?.status === 404) {
         toast.error("User profile endpoint not found. Contact support.", {
           position: "top-right",
@@ -84,11 +140,12 @@ const useAuthAPI = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
-  // Check authentication status and fetch user on mount
+  // Check authentication status on mount
   useEffect(() => {
-    if (isAuthenticated()) {
+    console.log("Checking authentication, isAuthenticated:", isAuthenticated());
+    if (isAuthenticated() && !user) {
       fetchCurrentUser();
     }
   }, [fetchCurrentUser]);
@@ -96,38 +153,51 @@ const useAuthAPI = () => {
   const login = async (email, password) => {
     setIsLoading(true);
     try {
-      console.log("Logging in with:", { email });
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.LOGIN, {
-        email,
-        password,
-      });
+      const endpoint = API_CONFIG.ENDPOINTS.LOGIN;
+      const fullUrl = `${API_CONFIG.BASE_URL}${endpoint}`;
+      console.log("Attempting login at:", fullUrl, { email });
+
+      const response = await apiClient.post(
+        endpoint,
+        { email, password },
+        {
+          headers: {
+            apiKey: API_CONFIG.API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       console.log("Login response:", response.data);
 
       if (response.data.code === "200") {
         const token = response.data.token;
-        // Save user data if available in response
+        if (!token) {
+          throw new Error("No token received from login response");
+        }
+
+        let userData = null;
         if (response.data.data) {
-          const userData = response.data.data;
+          userData = response.data.data;
           setUser(userData);
 
-          // Store user data in localStorage
           localStorage.setItem(
             "userData",
             JSON.stringify({
-              name: userData.name,
-              email: userData.email,
+              name: userData.name || "",
+              email: userData.email || "",
+              role: userData.role || "user",
             })
           );
         }
 
         localStorage.setItem("token", token);
 
-        // Dispatch a custom event for components to listen for login
         window.dispatchEvent(
           new CustomEvent("userLoggedIn", {
             detail: {
-              username: response.data.data?.name || email,
+              username: userData?.name || email,
+              role: userData?.role || "user",
             },
           })
         );
@@ -136,9 +206,17 @@ const useAuthAPI = () => {
           position: "top-right",
         });
 
-        // After login, fetch user data if not already provided
-        if (!response.data.data) {
-          await fetchCurrentUser();
+        if (!userData) {
+          userData = await fetchCurrentUser();
+        }
+
+        if (userData) {
+          redirectBasedOnRole(userData);
+        } else {
+          toast.error("Failed to fetch user data after login.", {
+            position: "top-right",
+          });
+          navigate("/login");
         }
 
         return true;
@@ -149,9 +227,22 @@ const useAuthAPI = () => {
         return false;
       }
     } catch (error) {
-      console.error("Error logging in:", error);
-      const errorMessage =
-        error.response?.data?.message || "An error occurred. Please try again.";
+      console.error("Error logging in:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+
+      let errorMessage = "An error occurred. Please try again.";
+      if (error.response?.status === 404) {
+        errorMessage =
+          "Login endpoint not found. Please check API configuration or contact support.";
+      } else if (error.response?.status === 401) {
+        errorMessage = "Invalid email or password.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
       toast.error(errorMessage, {
         position: "top-right",
       });
@@ -164,11 +255,17 @@ const useAuthAPI = () => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      console.log(
-        "Calling logout:",
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGOUT}`
-      );
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.LOGOUT);
+      const endpoint = API_CONFIG.ENDPOINTS.LOGOUT;
+      const fullUrl = `${API_CONFIG.BASE_URL}${endpoint}`;
+      console.log("Calling logout:", fullUrl);
+
+      const response = await apiClient.get(endpoint, {
+        headers: {
+          apiKey: API_CONFIG.API_KEY,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       console.log("Logout response:", response.data);
 
@@ -177,10 +274,10 @@ const useAuthAPI = () => {
         localStorage.removeItem("userData");
         setUser(null);
 
-        // Dispatch storage event to notify components
         window.dispatchEvent(new Event("storage"));
 
         toast.success("Logout successful!", { position: "top-right" });
+        navigate("/login");
         return true;
       } else {
         toast.error(response.data.message || "Logout failed!", {
@@ -189,32 +286,35 @@ const useAuthAPI = () => {
         return false;
       }
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error("Error logging out:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
 
-      // Even if API fails, clear local data
       localStorage.removeItem("token");
       localStorage.removeItem("userData");
       setUser(null);
 
-      // Dispatch storage event to notify components
       window.dispatchEvent(new Event("storage"));
 
-      const errorMessage =
+      toast.error(
         error.response?.data?.message ||
-        "An error occurred during logout. Please try again.";
-      toast.error(errorMessage, {
-        position: "top-right",
-      });
-      return true; // Return true to redirect anyway
+          "An error occurred during logout. Please try again.",
+        {
+          position: "top-right",
+        }
+      );
+      navigate("/login");
+      return true;
     } finally {
       setIsLoading(false);
     }
   };
 
   const register = async (userData) => {
-    // Validasi data
     if (!userData.email || !userData.password || !userData.passwordRepeat) {
-      toast.error("Email, password and password confirmation are required", {
+      toast.error("Email, password, and password confirmation are required", {
         position: "top-right",
       });
       return false;
@@ -229,17 +329,21 @@ const useAuthAPI = () => {
 
     setIsLoading(true);
     try {
-      console.log("Registering with:", userData);
-      // Tambahkan default role jika tidak ada
+      const endpoint = API_CONFIG.ENDPOINTS.REGISTER;
+      const fullUrl = `${API_CONFIG.BASE_URL}${endpoint}`;
+      console.log("Registering at:", fullUrl, userData);
+
       const registrationData = {
         ...userData,
         role: userData.role || "user",
       };
 
-      const response = await apiClient.post(
-        API_CONFIG.ENDPOINTS.REGISTER,
-        registrationData
-      );
+      const response = await apiClient.post(endpoint, registrationData, {
+        headers: {
+          apiKey: API_CONFIG.API_KEY,
+          "Content-Type": "application/json",
+        },
+      });
 
       console.log("Register response:", response.data);
 
@@ -247,9 +351,9 @@ const useAuthAPI = () => {
         toast.success("Registration successful! Please login.", {
           position: "top-right",
         });
+        navigate("/login");
         return true;
       } else {
-        // Menampilkan pesan error spesifik jika ada
         if (response.data.errors && response.data.errors.length > 0) {
           response.data.errors.forEach((err) => {
             toast.error(`${err.field}: ${err.message}`, {
@@ -264,9 +368,12 @@ const useAuthAPI = () => {
         return false;
       }
     } catch (error) {
-      console.error("Error registering:", error);
+      console.error("Error registering:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
 
-      // Handle validasi error dari server
       if (error.response?.data?.errors) {
         error.response.data.errors.forEach((err) => {
           toast.error(`${err.field}: ${err.message}`, {
@@ -288,13 +395,11 @@ const useAuthAPI = () => {
     }
   };
 
-  // Check if user is authenticated
   const isAuthenticated = () => {
     const token = localStorage.getItem("token");
     return !!token;
   };
 
-  // Get user information from localStorage if not in state
   const getUserInfo = () => {
     if (user) return user;
 
@@ -310,6 +415,11 @@ const useAuthAPI = () => {
     return null;
   };
 
+  const isAdmin = () => {
+    const currentUser = user || getUserInfo();
+    return currentUser?.role?.toLowerCase() === "admin";
+  };
+
   return {
     login,
     logout,
@@ -318,6 +428,8 @@ const useAuthAPI = () => {
     isLoading,
     user: user || getUserInfo(),
     fetchCurrentUser,
+    isAdmin,
+    redirectBasedOnRole,
   };
 };
 

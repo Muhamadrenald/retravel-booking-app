@@ -11,9 +11,9 @@ const Cart = () => {
     console.error("useCartAPI error:", error.message);
     return (
       <div className="container mx-auto py-6 px-4 lg:px-8">
-        <h1 className="text-2xl font-bold mb-4">Keranjang Anda</h1>
+        <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
         <p className="text-red-500">
-          Error: Komponen ini harus digunakan dalam CartProvider.
+          Error: This component must be used within a CartProvider.
         </p>
       </div>
     );
@@ -28,20 +28,17 @@ const Cart = () => {
     fetchCartItems,
   } = cartAPI;
 
-  console.log("Cart.jsx cartItems:", JSON.stringify(cartItems, null, 2));
-
   const [toast, setToast] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
 
-  // Memuat data keranjang saat komponen dimuat
   useEffect(() => {
     const loadCart = async () => {
       try {
         await fetchCartItems();
       } catch (error) {
-        console.error("Gagal memuat keranjang:", error);
+        console.error("Failed to load cart:", error);
         setToast({
-          message: "Gagal memuat keranjang. Silakan coba lagi.",
+          message: "Failed to load cart. Please try again.",
           type: "error",
         });
       }
@@ -49,79 +46,60 @@ const Cart = () => {
     loadCart();
   }, [fetchCartItems]);
 
-  // Fungsi untuk memformat rentang tanggal
   const formatDateRange = (bookingDate, activityId) => {
-    console.log(
-      "Formatting bookingDate for activityId:",
-      activityId,
-      bookingDate
-    );
-
-    // Coba gunakan bookingDate dari cartItems
-    if (bookingDate && bookingDate.checkIn && bookingDate.checkOut) {
+    if (bookingDate && bookingDate.start && bookingDate.end) {
       try {
         const options = { day: "numeric", month: "long", year: "numeric" };
-        const checkIn = new Date(bookingDate.checkIn).toLocaleDateString(
+        const start = new Date(bookingDate.start).toLocaleDateString(
           "id-ID",
           options
         );
-        const checkOut = new Date(bookingDate.checkOut).toLocaleDateString(
+        const end = new Date(bookingDate.end).toLocaleDateString(
           "id-ID",
           options
         );
-        return `${checkIn} - ${checkOut}`;
+        return `${start} - ${end}`;
       } catch (error) {
         console.error("Error formatting bookingDate:", error);
       }
     }
 
-    // Fallback ke localStorage
     const storedBookingDate = localStorage.getItem(`bookingDate_${activityId}`);
     if (storedBookingDate) {
       try {
         const parsed = JSON.parse(storedBookingDate);
-        if (parsed.checkIn && parsed.checkOut) {
+        if (parsed.start && parsed.end) {
           const options = { day: "numeric", month: "long", year: "numeric" };
-          const checkIn = new Date(parsed.checkIn).toLocaleDateString(
+          const start = new Date(parsed.start).toLocaleDateString(
             "id-ID",
             options
           );
-          const checkOut = new Date(parsed.checkOut).toLocaleDateString(
-            "id-ID",
-            options
-          );
-          return `${checkIn} - ${checkOut}`;
+          const end = new Date(parsed.end).toLocaleDateString("id-ID", options);
+          return `${start} - ${end}`;
         }
       } catch (error) {
         console.error("Error parsing stored bookingDate:", error);
       }
     }
 
-    return "Tanggal tidak tersedia";
+    return "Dates not available";
   };
 
-  // Menggabungkan entri dengan activityId yang sama
   const mergedCartItems = cartItems.reduce((acc, item) => {
     const existingItem = acc.find((i) => i.activityId === item.activityId);
     if (existingItem) {
       existingItem.quantity += item.quantity;
       existingItem.bookingDate = item.bookingDate || existingItem.bookingDate;
-      existingItem.cartIds = [...(existingItem.cartIds || []), item.id]; // Simpan semua cartIds
+      existingItem.cartIds = [...(existingItem.cartIds || []), item.id];
     } else {
       acc.push({
         ...item,
-        cartIds: [item.id], // Simpan cartId untuk operasi seperti remove
+        cartIds: [item.id],
       });
     }
     return acc;
   }, []);
 
-  console.log(
-    "Cart.jsx mergedCartItems:",
-    JSON.stringify(mergedCartItems, null, 2)
-  );
-
-  // Sort mergedCartItems to maintain consistent order
   const sortedCartItems = [...mergedCartItems].sort((a, b) => {
     if (a.activityId && b.activityId) {
       return a.activityId.localeCompare(b.activityId);
@@ -144,6 +122,14 @@ const Cart = () => {
     }, 0);
   };
 
+  const getRatingLabel = (rating) => {
+    if (rating >= 4.5) return "Spectacular";
+    if (rating >= 4.0) return "Very Good";
+    if (rating >= 3.0) return "Good";
+    if (rating >= 2.0) return "Average";
+    return "Poor";
+  };
+
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -151,24 +137,23 @@ const Cart = () => {
 
   const handleRemoveItem = async (cartIds) => {
     try {
-      // Hapus semua cartIds terkait
       const removePromises = cartIds.map((cartId) => removeFromCart(cartId));
       const results = await Promise.all(removePromises);
       const allSuccessful = results.every(
-        (result) => String(result.code) === "200"
+        (result) => String(result?.code) === "200"
       );
       if (allSuccessful) {
         setSelectedItems((prev) => prev.filter((id) => !cartIds.includes(id)));
-        showToast("Item berhasil dihapus dari keranjang");
+        showToast("Item successfully removed from cart");
       } else {
-        throw new Error("Gagal menghapus beberapa item");
+        throw new Error("Failed to remove some items");
       }
     } catch (error) {
-      console.error("Gagal menghapus item:", error);
+      console.error("Failed to remove item:", error);
       showToast(
-        error.message === "Item sudah tidak ada di keranjang server"
-          ? "Item sudah dihapus"
-          : `Gagal menghapus item: ${error.message}`,
+        error.message === "Item already removed from server cart"
+          ? "Item already removed"
+          : `Failed to remove item: ${error.message}`,
         "error"
       );
     }
@@ -176,24 +161,20 @@ const Cart = () => {
 
   const handleQuantityChange = async (cartId, action) => {
     try {
-      console.log(
-        `Mengubah kuantitas untuk cartId: ${cartId}, action: ${action}`
-      );
       if (action === "increase") {
         await increaseItem(cartId);
-        showToast("Kuantitas berhasil ditambah");
+        showToast("Quantity increased successfully");
       } else {
         await decreaseItem(cartId);
-        showToast("Kuantitas berhasil dikurang");
+        showToast("Quantity decreased successfully");
       }
-      // Refresh cart items to ensure consistent order
       await fetchCartItems();
     } catch (error) {
-      console.error(`Gagal mengupdate kuantitas:`, error);
+      console.error(`Failed to update quantity:`, error);
       showToast(
-        error.message === "Item keranjang tidak ditemukan"
-          ? "Item tidak ditemukan. Silakan muat ulang keranjang."
-          : `Gagal mengupdate kuantitas: ${error.message}`,
+        error.message === "Cart item not found"
+          ? "Item not found. Please refresh cart."
+          : `Failed to update quantity: ${error.message}`,
         "error"
       );
     }
@@ -202,10 +183,10 @@ const Cart = () => {
   const handleRefreshCart = async () => {
     try {
       await fetchCartItems();
-      showToast("Keranjang berhasil dimuat ulang", "success");
+      showToast("Cart refreshed successfully", "success");
     } catch (error) {
-      console.error("Gagal memuat ulang keranjang:", error);
-      showToast("Gagal memuat ulang keranjang", "error");
+      console.error("Failed to refresh cart:", error);
+      showToast("Failed to refresh cart", "error");
     }
   };
 
@@ -219,13 +200,31 @@ const Cart = () => {
 
   const handleCheckout = () => {
     if (selectedItems.length > 0) {
+      const checkoutItems = mergedCartItems
+        .filter((item) => selectedItems.includes(item.activityId))
+        .map((item) => ({
+          activityId: item.activityId,
+          title: item.title || item.activity.title || "Unnamed Item",
+          imageUrl:
+            getImageUrl(item.imageUrls || item.activity.imageUrls) ||
+            "https://picsum.photos/200",
+          address:
+            item.address || item.activity.address || "Address not available",
+          rating: item.rating || item.activity.rating || 0,
+          totalReviews: item.total_reviews || item.activity.total_reviews || 0,
+          price:
+            item.price || item.activity.price_discount || item.activity.price,
+          quantity: item.quantity,
+          bookingDate: item.bookingDate,
+        }));
+      console.log("Checkout items:", checkoutItems);
+      localStorage.setItem("checkoutItems", JSON.stringify(checkoutItems));
       window.location.href = "/checkout";
     } else {
-      showToast("Pilih setidaknya satu item untuk checkout", "error");
+      showToast("Please select at least one item for checkout", "error");
     }
   };
 
-  // Helper function to get default image if original is missing
   const getImageUrl = (imageUrls) => {
     return imageUrls?.[0] || "https://picsum.photos/200";
   };
@@ -245,21 +244,21 @@ const Cart = () => {
         <div className="flex-1">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">
-              Keranjang Anda ({mergedCartItems.length})
+              Your Cart ({mergedCartItems.length})
             </h1>
             <button
               onClick={handleRefreshCart}
               disabled={isLoading}
               className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50"
             >
-              Muat Ulang Keranjang
+              Refresh Cart
             </button>
           </div>
 
           {isLoading ? (
             <div className="text-center py-12">
               <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-500">Memuat keranjang...</p>
+              <p className="text-gray-500">Loading cart...</p>
             </div>
           ) : mergedCartItems.length === 0 ? (
             <div className="text-center py-12">
@@ -280,74 +279,41 @@ const Cart = () => {
                 </svg>
               </div>
               <h2 className="text-xl font-medium text-gray-700 mb-2">
-                Keranjang Belanja Kosong
+                Your Cart is Empty
               </h2>
               <p className="text-gray-500 mb-6">
-                Silakan tambahkan produk ke keranjang belanja Anda
+                Please add items to your cart
               </p>
               <a
-                href="/"
+                href="/activities"
                 className="inline-flex items-center px-4 py-2 bg-primary border border-transparent rounded-md font-semibold text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
-                Lanjutkan Belanja
+                Continue Shopping
               </a>
             </div>
           ) : (
             <div className="space-y-4">
-              {sortedCartItems.map((item) => (
-                <div
-                  key={item.activityId}
-                  className="border rounded-lg overflow-hidden bg-white shadow-sm"
-                >
-                  <div className="p-4">
-                    <div className="flex items-center mb-2">
-                      <div className="bg-blue-100 text-blue-600 p-2 rounded-md mr-2">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                          <circle cx="12" cy="10" r="3" />
-                        </svg>
-                      </div>
-                      <span className="font-medium">Hotel</span>
-                      <button
-                        className="ml-auto text-gray-500 hover:text-gray-700"
-                        onClick={() => handleRemoveItem(item.cartIds)}
-                        disabled={isLoading}
-                      >
-                        <div className="flex items-center">
-                          <X size={18} className="mr-1" />
-                          <span>Hapus</span>
-                        </div>
-                      </button>
-                    </div>
+              {sortedCartItems.map((item) => {
+                const ratingValue = Math.min(
+                  Math.max(item.activity.rating || item.rating || 0, 0),
+                  5
+                );
+                console.log(
+                  `Rating for ${item.title || item.activity.title}:`,
+                  ratingValue
+                );
 
-                    <div className="flex mt-2">
-                      <div className="w-24 h-24 mr-4">
-                        <img
-                          src={getImageUrl(item.activity.imageUrls)}
-                          alt={item.activity.title || "Aktivitas"}
-                          className="w-full h-full object-cover rounded-md"
-                          onError={(e) => {
-                            e.target.src = "https://picsum.photos/200";
-                          }}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h2 className="text-lg font-semibold">
-                          {item.activity.title || "Nama tidak tersedia"}
-                        </h2>
-                        <div className="flex items-center text-gray-500 mt-1">
+                return (
+                  <div
+                    key={item.activityId}
+                    className="border rounded-lg overflow-hidden bg-white shadow-sm"
+                  >
+                    <div className="p-4">
+                      <div className="flex items-center mb-2">
+                        <div className="bg-blue-primary text-primary p-2 rounded-md mr-2">
                           <svg
-                            width="16"
-                            height="16"
+                            width="20"
+                            height="20"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -358,127 +324,197 @@ const Cart = () => {
                             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                             <circle cx="12" cy="10" r="3" />
                           </svg>
-                          <span className="ml-1">
-                            {item.activity.address || "Lokasi tidak tersedia"}
-                          </span>
                         </div>
-
-                        <div className="flex items-center mt-1">
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <svg
-                                key={star}
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill={
-                                  star <= (item.activity.rating?.value || 5)
-                                    ? "currentColor"
-                                    : "none"
-                                }
-                                stroke="currentColor"
-                                className="text-yellow-400"
-                              >
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.16 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                              </svg>
-                            ))}
-                          </div>
-                          <span className="text-blue-600 ml-2">
-                            {item.activity.rating?.value || "5.0"} Spektakuler
-                          </span>
-                          <span className="text-gray-500 ml-2">
-                            {item.activity.total_reviews || "0"} ulasan
-                          </span>
-                        </div>
-
-                        {item.activity.price_discount &&
-                          item.activity.price_discount <
-                            item.activity.price && (
-                            <div className="mt-1">
-                              <span className="bg-red-100 text-red-600 text-xs font-medium px-2 py-1 rounded-md">
-                                {Math.round(
-                                  (1 -
-                                    item.activity.price_discount /
-                                      item.activity.price) *
-                                    100
-                                )}
-                                % OFF
-                              </span>
-                            </div>
-                          )}
-
-                        <div className="mt-2">
+                        <span className="font-medium">Item</span>
+                        <button
+                          className="ml-auto text-gray-500 hover:text-gray-700"
+                          onClick={() => handleRemoveItem(item.cartIds)}
+                          disabled={isLoading}
+                        >
                           <div className="flex items-center">
-                            {item.activity.price_discount &&
-                              item.activity.price_discount <
-                                item.activity.price && (
-                                <span className="text-gray-500 line-through mr-2">
-                                  {formatCurrency(item.activity.price)}
-                                </span>
-                              )}
-                            <span className="text-lg font-semibold">
-                              {formatCurrency(
-                                item.activity.price_discount ||
-                                  item.activity.price
-                              )}
+                            <X size={18} className="mr-1" />
+                            <span>Remove</span>
+                          </div>
+                        </button>
+                      </div>
+
+                      <div className="flex mt-2">
+                        <div className="w-24 h-24 mr-4">
+                          <img
+                            src={getImageUrl(
+                              item.imageUrls || item.activity.imageUrls
+                            )}
+                            alt={item.title || item.activity.title || "Item"}
+                            className="w-full h-full object-cover rounded-md"
+                            onError={(e) => {
+                              e.target.src = "https://picsum.photos/200";
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h2 className="text-lg font-semibold">
+                            {item.title ||
+                              item.activity.title ||
+                              "Unnamed Item"}
+                          </h2>
+                          <div className="flex items-center text-gray-500 mt-1">
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                              <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            <span className="ml-1">
+                              {item.address ||
+                                item.activity.address ||
+                                "Location not available"}
                             </span>
-                            <div className="flex items-center ml-3">
-                              <button
-                                onClick={() =>
-                                  handleQuantityChange(
-                                    item.cartIds[0],
-                                    "decrease"
-                                  )
-                                }
-                                disabled={isLoading || item.quantity <= 1}
-                                className="px-2 py-1 bg-gray-100 rounded-l-md hover:bg-gray-200 disabled:opacity-50"
-                              >
-                                -
-                              </button>
-                              <span className="px-3 py-1 bg-gray-50">
-                                {item.quantity} kamar
+                          </div>
+
+                          <div className="flex items-center mt-1">
+                            {item.rating != null ||
+                            item.activity.rating != null ? (
+                              <div className="flex">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <svg
+                                    key={star}
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill={
+                                      star <= ratingValue
+                                        ? "currentColor"
+                                        : "none"
+                                    }
+                                    stroke="currentColor"
+                                    className="text-yellow-400 mr-1"
+                                  >
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.16 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                  </svg>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500 text-sm">
+                                No rating available
                               </span>
-                              <button
-                                onClick={() =>
-                                  handleQuantityChange(
-                                    item.cartIds[0],
-                                    "increase"
-                                  )
-                                }
-                                disabled={isLoading}
-                                className="px-2 py-1 bg-gray-100 rounded-r-md hover:bg-gray-200 disabled:opacity-50"
-                              >
-                                +
-                              </button>
+                            )}
+                            {(item.rating != null ||
+                              item.activity.rating != null) && (
+                              <>
+                                <span className="text-primary ml-2">
+                                  {ratingValue.toFixed(1)}{" "}
+                                  {getRatingLabel(ratingValue)}
+                                </span>
+                                <span className="text-gray-500 ml-2">
+                                  (
+                                  {item.total_reviews ||
+                                    item.activity.total_reviews ||
+                                    0}{" "}
+                                  reviews)
+                                </span>
+                              </>
+                            )}
+                          </div>
+
+                          {item.activity.price_discount &&
+                            item.activity.price_discount <
+                              item.activity.price && (
+                              <div className="mt-1">
+                                <span className="bg-red-100 text-red-600 text-xs font-medium px-2 py-1 rounded-md">
+                                  {Math.round(
+                                    (1 -
+                                      item.activity.price_discount /
+                                        item.activity.price) *
+                                      100
+                                  )}
+                                  % OFF
+                                </span>
+                              </div>
+                            )}
+
+                          <div className="mt-2">
+                            <div className="flex items-center">
+                              {item.activity.price_discount &&
+                                item.activity.price_discount <
+                                  item.activity.price && (
+                                  <span className="text-gray-500 line-through mr-2">
+                                    {formatCurrency(item.activity.price)}
+                                  </span>
+                                )}
+                              <span className="text-lg font-semibold">
+                                {formatCurrency(
+                                  item.price ||
+                                    item.activity.price_discount ||
+                                    item.activity.price
+                                )}
+                              </span>
+                              <div className="flex items-center ml-3">
+                                <button
+                                  onClick={() =>
+                                    handleQuantityChange(
+                                      item.cartIds[0],
+                                      "decrease"
+                                    )
+                                  }
+                                  disabled={isLoading || item.quantity <= 1}
+                                  className="px-2 py-1 bg-gray-100 rounded-l-md hover:bg-gray-200 disabled:opacity-50"
+                                >
+                                  -
+                                </button>
+                                <span className="px-3 py-1 bg-gray-50">
+                                  {item.quantity} items
+                                </span>
+                                <button
+                                  onClick={() =>
+                                    handleQuantityChange(
+                                      item.cartIds[0],
+                                      "increase"
+                                    )
+                                  }
+                                  disabled={isLoading}
+                                  className="px-2 py-1 bg-gray-100 rounded-r-md hover:bg-gray-200 disabled:opacity-50"
+                                >
+                                  +
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="border-t p-4">
-                    <div className="flex items-center flex-wrap">
-                      <div className="flex items-center text-gray-500 mr-6 mb-2 sm:mb-0">
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.includes(item.activityId)}
-                          onChange={() => handleCheckboxChange(item.activityId)}
-                          className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                        />
-                        <Calendar size={16} className="mr-1" />
-                        <span className="ml-1">
-                          {formatDateRange(item.bookingDate, item.activityId)}
-                        </span>
-                      </div>
-                      <div className="flex items-center text-gray-500 mb-2 sm:mb-0">
-                        <Users size={16} className="mr-1" />
-                        <span className="ml-1">{item.quantity} kamar</span>
+                    <div className="border-t p-4">
+                      <div className="flex items-center flex-wrap">
+                        <div className="flex items-center text-gray-500 mr-6 mb-2 sm:mb-0">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(item.activityId)}
+                            onChange={() =>
+                              handleCheckboxChange(item.activityId)
+                            }
+                            className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                          <Calendar size={16} className="mr-1" />
+                          <span className="ml-1">
+                            {formatDateRange(item.bookingDate, item.activityId)}
+                          </span>
+                        </div>
+                        <div className="flex items-center text-gray-500 mb-2 sm:mb-0">
+                          <Users size={16} className="mr-1" />
+                          <span className="ml-1">{item.quantity} items</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -486,18 +522,18 @@ const Cart = () => {
         {/* Order Summary */}
         <div className="w-full lg:w-80">
           <div className="bg-white p-6 rounded-lg shadow-md space-y-4 sticky top-4">
-            <h2 className="text-xl font-semibold">Ringkasan Belanja</h2>
+            <h2 className="text-xl font-semibold">Order Summary</h2>
             {selectedItems.length === 0 ? (
-              <p className="text-gray-500">Belum ada item dipilih</p>
+              <p className="text-gray-500">No items selected</p>
             ) : (
               <>
                 <div className="space-y-2 border-b pb-3">
                   <div className="flex justify-between">
-                    <span>Total Harga:</span>
+                    <span>Total Price:</span>
                     <span>{formatCurrency(getSelectedItemsTotal())}</span>
                   </div>
                   <p className="text-sm text-gray-600 italic">
-                    Harga sudah termasuk pajak & biaya layanan
+                    Price includes taxes & service fees
                   </p>
                 </div>
                 <div className="flex justify-between font-medium text-lg">
@@ -520,24 +556,24 @@ const Cart = () => {
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  <span>Memproses...</span>
+                  <span>Processing...</span>
                 </div>
               ) : (
-                "Lanjut ke Pembayaran"
+                "Proceed to Payment"
               )}
             </button>
 
             <div className="text-sm text-gray-500">
               <p>
-                Dengan melanjutkan, Anda menyetujui{" "}
+                By proceeding, you agree to our{" "}
                 <a href="#" className="text-primary hover:underline">
-                  Syarat dan Ketentuan
+                  Terms and Conditions
                 </a>{" "}
-                serta{" "}
+                and{" "}
                 <a href="#" className="text-primary hover:underline">
-                  Kebijakan Privasi
-                </a>{" "}
-                kami.
+                  Privacy Policy
+                </a>
+                .
               </p>
             </div>
           </div>

@@ -1,18 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MdAlternateEmail } from "react-icons/md";
-import { FaFingerprint, FaRegEye, FaRegEyeSlash } from "react-icons/fa";
-import { BsApple } from "react-icons/bs";
-import { FaXTwitter } from "react-icons/fa6";
+import { BsEyeSlash, BsEye, BsGoogle } from "react-icons/bs";
 import "./index.css"; // Import file CSS
 import useAuthAPI from "../../hooks/useAuthAPI"; // Import custom hook
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState(""); // State untuk pesan error email
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState(""); // State untuk pesan error password
+  const [passwordError, setPasswordError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
   // Gunakan custom hook untuk API
@@ -54,114 +52,124 @@ const Login = () => {
     const isSuccess = await login(email, password);
 
     if (isSuccess) {
-      setTimeout(() => {
-        navigate("/");
-      }, 3000);
+      console.log("Login successful, redirect handled by useAuthAPI");
     }
   };
 
   return (
-    <div className="flex items-center justify-center w-full h-screen login-page">
-      <div className="w-[90%] max-w-sm md:max-w-md lg:max-w-md p-5 bg-gray-900 flex-col flex items-center gap-3 rounded-xl shadow-lg">
-        <div className="flex items-center gap-3">
-          <img src="/travel.png" alt="logo" className="w-[50px]" />
-          <span className="text-2xl font-bold text-primary">ReTravel</span>
-        </div>
-        {/* <img src="/travel.png" alt="logo" className="w-[100px]" /> */}
-        <h1 className="text-lg font-semibold md:text-xl">Welcome Back</h1>
-        <p className="text-xs text-center text-gray-500 md:text-sm">
-          Don&apos;t have an account?
-          <span
-            className="text-white cursor-pointer"
-            onClick={() => navigate("/register")}
-          >
-            {" "}
-            Sign up
-          </span>
-        </p>
+    <div className="flex w-full min-h-screen bg-gray-50">
+      {/* Left section with image - Increased width for more columns */}
+      <div className="hidden md:block md:w-2/3 h-screen relative">
+        <img
+          src="/travel.jpg"
+          alt="Travel image"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* <div className="absolute bottom-4 left-4 text-xs text-white">
+          Photo by Muhamad Renald
+        </div> */}
+      </div>
 
-        <form className="flex flex-col w-full gap-3" onSubmit={handleLogin}>
-          {/* Input Email */}
-          <div className="flex flex-col w-full">
-            <div className="flex items-center w-full gap-2 p-2 bg-gray-800 rounded-xl">
-              <MdAlternateEmail />
+      {/* Right section with login form - Reduced width */}
+      <div className="w-full md:w-1/3 px-8 py-8 md:px-16 flex items-center justify-center">
+        <div className="max-w-md w-full">
+          {/* Logo and Header */}
+          {/* <div className="flex items-center mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500"></div>
+            <h1 className="ml-2 text-xl font-bold">UI Unicorn</h1>
+          </div> */}
+
+          <h2 className="text-2xl font-bold mb-6">Nice to see you again</h2>
+
+          <form className="flex flex-col w-full gap-5" onSubmit={handleLogin}>
+            <div className="flex flex-col">
+              <label className="text-sm mb-2">Login</label>
               <input
                 type="email"
-                placeholder="Email address"
-                className="w-full text-sm bg-transparent border-0 outline-none md:text-base"
+                placeholder="Email or phone number"
+                className="w-full p-3 border border-gray-200 rounded-md bg-gray-50"
                 value={email}
                 onChange={(e) => validateEmail(e.target.value)}
                 disabled={isLoading}
                 required
               />
+              {emailError && (
+                <p className="mt-1 text-xs text-red-500">{emailError}</p>
+              )}
             </div>
-            {emailError && (
-              <p className="mt-1 text-xs text-red-500">{emailError}</p>
-            )}
-          </div>
 
-          {/* Input Password */}
-          <div className="relative flex items-center w-full gap-2 p-2 bg-gray-800 rounded-xl">
-            <FaFingerprint />
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              className="w-full text-sm bg-transparent border-0 outline-none md:text-base"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+            <div className="flex flex-col relative">
+              <label className="text-sm mb-2">Password</label>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter password"
+                className="w-full p-3 border border-gray-200 rounded-md bg-gray-50"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                required
+              />
+              <div
+                className="absolute right-3 top-10 cursor-pointer"
+                onClick={togglePasswordView}
+              >
+                {showPassword ? <BsEyeSlash /> : <BsEye />}
+              </div>
+              {passwordError && (
+                <p className="mt-1 text-xs text-red-500">{passwordError}</p>
+              )}
+              <div className="flex justify-between items-center mt-2">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="remember"
+                    className="mr-2"
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
+                  />
+                  <label htmlFor="remember" className="text-sm">
+                    Remember me
+                  </label>
+                </div>
+                <a href="#" className="text-sm text-blue-500">
+                  Forgot password?
+                </a>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className={`w-full p-3 mt-4 text-white font-medium rounded-md ${
+                isLoading
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600"
+              }`}
               disabled={isLoading}
-              required
-            />
-            {showPassword ? (
-              <FaRegEyeSlash
-                className="absolute cursor-pointer right-5"
-                onClick={togglePasswordView}
-              />
-            ) : (
-              <FaRegEye
-                className="absolute cursor-pointer right-5"
-                onClick={togglePasswordView}
-              />
-            )}
-          </div>
-          {passwordError && (
-            <p className="mt-1 text-xs text-red-500">{passwordError}</p>
-          )}
+            >
+              {isLoading ? "Signing in..." : "Sign in"}
+            </button>
 
-          <button
-            type="submit"
-            className={`w-full p-2 mt-3 text-sm rounded-xl md:text-base cursor-pointer ${
-              isLoading
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600"
-            }`}
-            disabled={isLoading}
-          >
-            {isLoading ? "Logging in..." : "Login"}
-          </button>
-        </form>
+            <button
+              type="button"
+              className="w-full p-3 flex items-center justify-center bg-gray-800 text-white rounded-md hover:bg-gray-900"
+            >
+              <BsGoogle className="mr-2" />
+              Or sign in with Google
+            </button>
 
-        <div className="relative flex items-center justify-center w-full py-3">
-          <div className="w-2/5 h-[2px] bg-gray-800"></div>
-          <h3 className="px-4 text-xs text-gray-500 font-lora md:text-sm">
-            Or
-          </h3>
-          <div className="w-2/5 h-[2px] bg-gray-800"></div>
-        </div>
+            <div className="text-center mt-4">
+              <span className="text-sm">Don't have an account? </span>
+              <span
+                className="text-sm text-blue-500 cursor-pointer"
+                onClick={() => navigate("/register")}
+              >
+                Sign up now
+              </span>
+            </div>
+          </form>
 
-        <div className="flex items-center w-full gap-2 justify-evenly md:justify-between">
-          <div className="p-2 cursor-pointer md:px-6 lg:px-10 bg-slate-700 rounded-xl hover:bg-slate-800">
-            <BsApple className="text-lg md:text-xl" />
-          </div>
-          <div className="p-1 cursor-pointer md:px-6 lg:px-10 bg-slate-700 rounded-xl hover:bg-slate-800">
-            <img
-              src="/google-icon.png"
-              alt="google-icon"
-              className="w-6 md:w-8"
-            />
-          </div>
-          <div className="p-2 cursor-pointer md:px-6 lg:px-10 bg-slate-700 rounded-xl hover:bg-slate-800">
-            <FaXTwitter className="text-lg md:text-xl" />
+          <div className="mt-16 text-center text-xs text-gray-500">
+            © Muhamad Renald 2025
           </div>
         </div>
       </div>

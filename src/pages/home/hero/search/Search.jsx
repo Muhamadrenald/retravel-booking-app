@@ -1,37 +1,84 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { TbArrowsExchange } from "react-icons/tb";
-import { FaMapMarkerAlt, FaSearch, FaCalendarAlt } from "react-icons/fa";
+import { FaSearch, FaCalendarAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { API_CONFIG } from "../../../../api/config";
 
 const Search = () => {
-  // State untuk menyimpan tanggal hari ini dalam format YYYY-MM-DD
+  const navigate = useNavigate();
   const [today, setToday] = useState("");
-
-  // State untuk tanggal keberangkatan dan kepulangan
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [error, setError] = useState(null);
+  const [categoryError, setCategoryError] = useState("");
 
-  // Mengatur tanggal hari ini saat komponen dimuat
+  const fallbackCategories = [
+    { id: "1", name: "Japan" },
+    { id: "2", name: "Indonesia" },
+    { id: "3", name: "Thailand" },
+    { id: "4", name: "Italy" },
+  ];
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORIES}`,
+          {
+            headers: {
+              apiKey: API_CONFIG.API_KEY,
+            },
+          }
+        );
+
+        if (!response.ok)
+          throw new Error(`HTTP error! Status: ${response.status}`);
+
+        const data = await response.json();
+        setCategories(data.data || fallbackCategories);
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching categories:", error.message);
+        setError("Failed to load categories. Using backup data.");
+        setCategories(fallbackCategories);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   useEffect(() => {
     const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-    const day = String(currentDate.getDate()).padStart(2, "0");
-    const formattedDate = `${year}-${month}-${day}`;
-
+    const formattedDate = currentDate.toISOString().split("T")[0];
     setToday(formattedDate);
     setDepartureDate(formattedDate);
     setReturnDate(formattedDate);
   }, []);
 
-  // Fungsi untuk menangani perubahan tanggal keberangkatan
   const handleDepartureChange = (e) => {
     setDepartureDate(e.target.value);
-
-    // Jika tanggal kepulangan lebih awal dari keberangkatan yang baru, sesuaikan
     if (returnDate < e.target.value) {
       setReturnDate(e.target.value);
     }
+  };
+
+  const handleSearch = () => {
+    // Clear previous error message
+    setCategoryError("");
+
+    // Check if category is selected
+    if (!selectedCategory) {
+      setCategoryError("Please select a category to continue");
+      return;
+    }
+
+    const queryParams = new URLSearchParams();
+    if (selectedCategory) queryParams.set("category", selectedCategory);
+    if (departureDate) queryParams.set("departure", departureDate);
+    if (returnDate) queryParams.set("return", returnDate);
+    navigate(`/activities?${queryParams.toString()}`);
   };
 
   return (
@@ -40,103 +87,150 @@ const Search = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -800 }}
       transition={{ duration: 1.5, ease: "easeOut" }}
-      className="w-full bg-neutral-50/20 border-2 border-neutral-300 shadow-lg rounded-xl p-5"
+      className="w-full bg-neutral-50/20 border-2 border-neutral-300 shadow-lg rounded-xl p-4 md:p-6"
     >
-      <div className="w-full flex flex-col md:flex-row items-start gap-5">
-        {/* From and to input section */}
-        <div className="w-full md:w-1/2 flex items-start gap-2 relative">
-          {/* From with label */}
-          <div className="w-1/2 flex flex-col items-start">
-            <div className="text-sm font-medium text-neutral-700 mb-1 text-left">
-              From
-            </div>
-            <div className="w-full h-14 border border-neutral-300 bg-white/70 text-base text-neutral-700 font-medium px-5 flex items-center gap-x-1 rounded-lg">
-              <input
-                type="text"
-                placeholder="From..."
-                className="flex-1 h-full border-none bg-transparent focus:outline-none"
-              />
-              <div className="w-5 h-5 text-neutral-400">
-                <FaMapMarkerAlt className="w-full h-full" />
-              </div>
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+        {/* Category Selection */}
+        <div className="w-full md:w-1/2 lg:w-2/5">
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
+            Category
+          </label>
+          <div className="relative">
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCategoryError("");
+              }}
+              className={`w-full h-12 md:h-14 pl-3 pr-8 border ${
+                categoryError ? "border-red-500" : "border-neutral-300"
+              } bg-white/70 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent`}
+            >
+              <option value="">Select category...</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <svg
+                className="h-5 w-5 text-neutral-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
             </div>
           </div>
-
-          {/* To with label */}
-          <div className="w-1/2 flex flex-col items-start">
-            <div className="text-sm font-medium text-neutral-700 mb-1 text-left">
-              To
-            </div>
-            <div className="w-full h-14 border border-neutral-300 bg-white/70 text-base text-neutral-700 font-medium px-5 flex items-center gap-x-1 rounded-lg">
-              <input
-                type="text"
-                placeholder="To..."
-                className="flex-1 h-full border-none bg-transparent focus:outline-none"
-              />
-              <div className="w-5 h-5 text-neutral-400">
-                <FaMapMarkerAlt className="w-full h-full" />
-              </div>
-            </div>
-          </div>
-
-          {/* Exchange button */}
-          <button className="absolute w-11 h-6 top-1/2 left-1/2 -translate-x-1/2  translate-y-1 rounded-full flex items-center justify-center bg-primary">
-            <TbArrowsExchange className="w-6 h-6 text-neutral-50" />
-          </button>
+          {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+          {categoryError && (
+            <p className="text-red-500 text-xs mt-1">{categoryError}</p>
+          )}
         </div>
 
-        {/* Date and button section */}
-        <div className="w-full md:w-1/2 flex items-start gap-3">
-          {/* Departure Date with label */}
-          <div className="w-1/3 flex flex-col items-start">
-            <div className="text-sm font-medium text-neutral-700 mb-1 text-left">
+        {/* Date Selection - Mobile (stacked) */}
+        <div className="flex flex-col gap-4 md:hidden">
+          <div className="w-full">
+            <label
+              htmlFor="departure"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
               Departure
-            </div>
-            <div className="w-full h-14 border border-neutral-300 bg-white/70 text-base text-neutral-700 font-medium px-3 flex items-center gap-x-1 rounded-lg">
+            </label>
+            <div className="relative">
               <input
                 type="date"
                 id="departure"
                 min={today}
                 value={departureDate}
                 onChange={handleDepartureChange}
-                className="flex-1 h-full border-none bg-transparent focus:outline-none"
+                className="w-full h-12 pl-3 pr-10 border border-neutral-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
-              {/* <div className="w-4 h-4 text-neutral-400">
-                <FaCalendarAlt className="w-full h-full" />
-              </div> */}
+              <FaCalendarAlt className="absolute right-3 top-3.5 text-neutral-400" />
             </div>
           </div>
 
-          {/* Return Date with label */}
-          <div className="w-1/3 flex flex-col items-start">
-            <div className="text-sm font-medium text-neutral-700 mb-1 text-left">
+          <div className="w-full">
+            <label
+              htmlFor="return"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
               Return
-            </div>
-            <div className="w-full h-14 border border-neutral-300 bg-white/70 text-base text-neutral-700 font-medium px-3 flex items-center gap-x-1 rounded-lg">
+            </label>
+            <div className="relative">
               <input
                 type="date"
                 id="return"
                 min={departureDate}
                 value={returnDate}
                 onChange={(e) => setReturnDate(e.target.value)}
-                className="flex-1 h-full border-none bg-transparent focus:outline-none"
+                className="w-full h-12 pl-3 pr-10 border border-neutral-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
-              {/* <div className="w-4 h-4 text-neutral-400">
-                <FaCalendarAlt className="w-full h-full" />
-              </div> */}
+              <FaCalendarAlt className="absolute right-3 top-3.5 text-neutral-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Date Selection - Desktop (inline) */}
+        <div className="hidden md:flex flex-1 gap-4">
+          <div className="flex-1">
+            <label
+              htmlFor="departure"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
+              Departure
+            </label>
+            <div className="relative">
+              <input
+                type="date"
+                id="departure"
+                min={today}
+                value={departureDate}
+                onChange={handleDepartureChange}
+                className="w-full h-14 pl-5 pr-5 border border-neutral-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              {/* <FaCalendarAlt className="absolute right-3 top-4 text-neutral-400" /> */}
             </div>
           </div>
 
-          {/* Search button with empty label space */}
-          <div className="w-1/3 flex flex-col items-start">
-            <div className="text-sm font-medium text-transparent mb-1 text-left">
-              &nbsp;
+          <div className="flex-1">
+            <label
+              htmlFor="return"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
+              Return
+            </label>
+            <div className="relative">
+              <input
+                type="date"
+                id="return"
+                min={departureDate}
+                value={returnDate}
+                onChange={(e) => setReturnDate(e.target.value)}
+                className="w-full h-14 pl-5 pr-5 border border-neutral-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              {/* <FaCalendarAlt className="absolute right-3 top-4 text-neutral-400" /> */}
             </div>
-            <button className="w-full h-13 bg-primary hover:bg-transparent border-2 border-primary hover:border-primary rounded-lg text-base font-medium text-neutral-50 flex items-center justify-center gap-x-2 hover:text-primary ease-in-out duration-300 cursor-pointer">
-              <FaSearch />
-              Search
-            </button>
           </div>
+        </div>
+
+        {/* Search Button */}
+        <div className="w-full md:w-auto flex flex-col">
+          <label className="block text-sm font-medium text-transparent mb-1">
+            &nbsp;
+          </label>
+          <button
+            onClick={handleSearch}
+            className="w-full md:w-32 h-12 md:h-14 bg-primary hover:bg-primary-dark text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors duration-300"
+          >
+            <FaSearch />
+            <span>Search</span>
+          </button>
         </div>
       </div>
     </motion.div>

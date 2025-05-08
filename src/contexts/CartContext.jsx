@@ -8,23 +8,42 @@ export const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   let isFetching = false;
+
+  // Check if user is logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
 
   // Fungsi untuk mengambil data keranjang dari API
   const fetchCartItems = useCallback(async () => {
+    // Check if user is logged in first
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setIsLoggedIn(false);
+      setCartItems([]);
+      return [];
+    }
+
+    setIsLoggedIn(true);
+
     if (isFetching) return;
     isFetching = true;
+
     try {
       setIsLoading(true);
       console.log(
         "Fetching cart items:",
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CARTS}`
       );
+
       const response = await axios.get(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CARTS}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
             apiKey: API_CONFIG.API_KEY,
             "Content-Type": "application/json",
           },
@@ -56,20 +75,17 @@ export const CartProvider = ({ children }) => {
       });
 
       if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("userData");
-        toast.error("Session expired. Please log in again.", {
-          position: "top-right",
-        });
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 1000);
+        handleLogout("Session expired. Please log in again.");
         throw new Error("Session expired. Please log in again.");
       }
 
-      toast.error(error.message || "Gagal mengambil data keranjang", {
-        position: "top-right",
-      });
+      // Don't show error toast for unauthorized users - just clear the cart silently
+      if (error.response?.status !== 401) {
+        toast.error(error.message || "Gagal mengambil data keranjang", {
+          position: "top-right",
+        });
+      }
+
       setCartItems([]);
       return [];
     } finally {
@@ -78,12 +94,56 @@ export const CartProvider = ({ children }) => {
     }
   }, []);
 
-  // Memuat data keranjang saat aplikasi dimuat
+  // Helper function to handle logout
+  const handleLogout = (message) => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userData");
+    setIsLoggedIn(false);
+    setCartItems([]);
+
+    if (message) {
+      toast.error(message, {
+        position: "top-right",
+      });
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1000);
+    }
+  };
+
+  // Check login and load cart data only if logged in
   useEffect(() => {
-    fetchCartItems();
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchCartItems().catch((error) => {
+        console.error(
+          "Failed to fetch cart items during initialization:",
+          error
+        );
+      });
+    } else {
+      setCartItems([]);
+    }
   }, [fetchCartItems]);
 
+  // Check if user is logged in before performing cart operations
+  const checkLoginStatus = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.info("Anda perlu login untuk menggunakan fitur ini", {
+        position: "top-right",
+      });
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1000);
+      return false;
+    }
+    return true;
+  };
+
   const addToCart = async (payload) => {
+    if (!checkLoginStatus()) return;
+
     try {
       setIsLoading(true);
       console.log("addToCart payload:", payload);
@@ -176,14 +236,7 @@ export const CartProvider = ({ children }) => {
       });
 
       if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("userData");
-        toast.error("Session expired. Please log in again.", {
-          position: "top-right",
-        });
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 1000);
+        handleLogout("Session expired. Please log in again.");
         throw new Error("Session expired. Please log in again.");
       }
 
@@ -191,6 +244,9 @@ export const CartProvider = ({ children }) => {
         error.message === "Success"
           ? "Terjadi kesalahan saat menambahkan ke keranjang"
           : error.message || "Terjadi kesalahan saat menambahkan ke keranjang";
+      toast.error(errorMessage, {
+        position: "top-right",
+      });
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -198,6 +254,8 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (itemId) => {
+    if (!checkLoginStatus()) return;
+
     try {
       setIsLoading(true);
 
@@ -262,26 +320,24 @@ export const CartProvider = ({ children }) => {
       }
 
       if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("userData");
-        toast.error("Session expired. Please log in again.", {
-          position: "top-right",
-        });
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 1000);
+        handleLogout("Session expired. Please log in again.");
         throw new Error("Session expired. Please log in again.");
       }
 
-      throw new Error(
-        error.message || "Terjadi kesalahan saat menghapus dari keranjang"
-      );
+      const errorMessage =
+        error.message || "Terjadi kesalahan saat menghapus dari keranjang";
+      toast.error(errorMessage, {
+        position: "top-right",
+      });
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateCart = async (itemId, payload) => {
+    if (!checkLoginStatus()) return;
+
     try {
       setIsLoading(true);
 
@@ -347,26 +403,24 @@ export const CartProvider = ({ children }) => {
       }
 
       if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("userData");
-        toast.error("Session expired. Please log in again.", {
-          position: "top-right",
-        });
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 1000);
+        handleLogout("Session expired. Please log in again.");
         throw new Error("Session expired. Please log in again.");
       }
 
-      throw new Error(
-        error.message || "Terjadi kesalahan saat memperbarui keranjang"
-      );
+      const errorMessage =
+        error.message || "Terjadi kesalahan saat memperbarui keranjang";
+      toast.error(errorMessage, {
+        position: "top-right",
+      });
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const increaseItem = async (itemId) => {
+    if (!checkLoginStatus()) return;
+
     try {
       setIsLoading(true);
       await fetchCartItems(); // Sinkronkan data
@@ -379,6 +433,9 @@ export const CartProvider = ({ children }) => {
       await updateCart(itemId, payload);
     } catch (error) {
       console.error("Error meningkatkan kuantitas:", error);
+      toast.error(error.message || "Gagal meningkatkan kuantitas", {
+        position: "top-right",
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -386,6 +443,8 @@ export const CartProvider = ({ children }) => {
   };
 
   const decreaseItem = async (itemId) => {
+    if (!checkLoginStatus()) return;
+
     try {
       setIsLoading(true);
       await fetchCartItems(); // Sinkronkan data
@@ -402,6 +461,9 @@ export const CartProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Error mengurangi kuantitas:", error);
+      toast.error(error.message || "Gagal mengurangi kuantitas", {
+        position: "top-right",
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -409,6 +471,8 @@ export const CartProvider = ({ children }) => {
   };
 
   const getCartTotal = () => {
+    if (!isLoggedIn) return 0;
+
     return cartItems.reduce(
       (total, item) =>
         total +
@@ -418,6 +482,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const clearCart = () => {
+    if (!checkLoginStatus()) return;
     setCartItems([]);
   };
 
@@ -435,6 +500,7 @@ export const CartProvider = ({ children }) => {
         clearCart,
         isLoading,
         fetchCartItems,
+        isLoggedIn,
       }}
     >
       {children}

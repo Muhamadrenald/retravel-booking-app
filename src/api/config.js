@@ -54,7 +54,8 @@ export const API_CONFIG = {
     CARTS: "/carts",
 
     // Transaction
-    TRANSACTION: "/transaction",
+    // TRANSACTION: "/transaction",
+    TRANSACTION: (transactionId) => `/transaction/${transactionId}`,
     MY_TRANSACTIONS: "/my-transactions",
     ALL_TRANSACTIONS: "/all-transactions",
     CREATE_TRANSACTION: "/create-transaction",

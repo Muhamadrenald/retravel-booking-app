@@ -1,15 +1,15 @@
 import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
+  const location = useLocation();
   const isAuthenticated = !!localStorage.getItem("token");
 
-  //   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
-  if (isAuthenticated) {
-    return <Outlet />;
-  } else {
-    return <Navigate to="/login" replace />;
-  }
+  console.log(
+    `ProtectedRoute checked, path: ${location.pathname}, isAuthenticated: ${isAuthenticated}`
+  ); // Debug log
+
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export default ProtectedRoute;

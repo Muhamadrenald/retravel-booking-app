@@ -1,5 +1,3 @@
-// src/utils/imageUtils.js
-
 /**
  * Memvalidasi dan mengembalikan URL gambar yang valid, dengan fallback ke placeholder
  * @param {string} url - URL gambar yang akan divalidasi

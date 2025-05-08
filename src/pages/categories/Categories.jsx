@@ -1,27 +1,17 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import RootLayout from "../../layouts/RootLayout";
-import { getAllCategories, getCategoryById } from "../../api/categoryService";
-import useActivitiesAPI from "../../hooks/useActivitiesAPI";
-import ActivityCard from "../../components/activitycard/ActivityCard";
+import { useNavigate } from "react-router-dom";
+import { getAllCategories } from "../../services/categoryService";
 
 function Categories() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [categoryActivities, setCategoryActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [visibleCategories, setVisibleCategories] = useState(4);
   const [hasMore, setHasMore] = useState(true);
 
-  const { getActivitiesByCategory } = useActivitiesAPI();
-
-  // Check for category ID in URL when component mounts
+  // Fetch categories when component mounts
   useEffect(() => {
-    const categoryIdFromUrl = searchParams.get("category");
-
     const fetchCategories = async () => {
       try {
         setLoading(true);
@@ -29,12 +19,6 @@ function Categories() {
         const fetchedCategories = result.data || [];
         setCategories(fetchedCategories);
         setHasMore(fetchedCategories.length > visibleCategories);
-
-        // If there's a category ID in URL, load that category
-        if (categoryIdFromUrl) {
-          handleCategorySelect(categoryIdFromUrl);
-        }
-
         setError(null);
       } catch (err) {
         setError("Gagal memuat kategori");
@@ -45,41 +29,11 @@ function Categories() {
     };
 
     fetchCategories();
-  }, [visibleCategories, searchParams]);
+  }, [visibleCategories]);
 
-  // Handler untuk memilih kategori
-  const handleCategorySelect = async (categoryId) => {
-    try {
-      setLoading(true);
-
-      // Update URL dengan menambahkan parameter category
-      navigate(`?category=${categoryId}`, { replace: true });
-
-      // Fetch detail kategori
-      const categoryDetail = await getCategoryById(categoryId);
-      setSelectedCategory(categoryDetail.data);
-
-      // Fetch aktivitas berdasarkan kategori
-      const activities = await getActivitiesByCategory(categoryId);
-      setCategoryActivities(activities || []);
-
-      setError(null);
-    } catch (err) {
-      setError("Gagal memuat detail kategori atau aktivitas");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handler untuk navigasi ke halaman aktivitas
-  const handleViewAllActivities = (categoryId) => {
-    navigate(`/activities?category=${categoryId}`);
-  };
-
-  // Handler untuk navigasi ke detail aktivitas
-  const handleActivitySelect = (activityId) => {
-    navigate(`/activities/${activityId}`);
+  // Handler untuk navigasi ke detail kategori
+  const handleCategorySelect = (categoryId) => {
+    navigate(`/categories/${categoryId}`);
   };
 
   // Handler untuk load more categories
@@ -132,44 +86,6 @@ function Categories() {
           >
             Load More
           </button>
-        </div>
-      )}
-
-      {selectedCategory && (
-        <div className="category-detail border-t pt-6">
-          <h2 className="text-2xl font-bold mb-4">{selectedCategory.name}</h2>
-          {selectedCategory.description && (
-            <p className="text-gray-600 mb-6">{selectedCategory.description}</p>
-          )}
-
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">
-              Activities in this category
-            </h3>
-            <button
-              className="px-4 py-2 bg-primary border border-primary hover:bg-transparent hover:border-primary hover:text-primary text-white rounded transition ease-in-out duration-300 cursor-pointer"
-              onClick={() => handleViewAllActivities(selectedCategory.id)}
-            >
-              See All
-            </button>
-          </div>
-
-          {categoryActivities.length > 0 ? (
-            <div className="activities-list grid grid-cols-1 md:grid-cols-3 gap-6">
-              {categoryActivities.slice(0, 3).map((activity) => (
-                <ActivityCard
-                  key={activity.id}
-                  activity={activity}
-                  onClick={handleActivitySelect}
-                  handleImageError={handleImageError}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-600">
-              There is no activity in this category
-            </p>
-          )}
         </div>
       )}
     </div>

@@ -6,19 +6,22 @@ import {
   ArrowLeft,
   Loader2,
   AlertCircle,
+  Search,
+  X,
 } from "lucide-react";
 import useActivitiesAPI from "../../hooks/useActivitiesAPI";
-import { getAllCategories } from "../../api/categoryService";
+import { getAllCategories } from "../../services/categoryService";
 import ActivityCard from "../../components/activitycard/ActivityCard";
+import useActivitiesSearch from "../../hooks/useActivitiesSearch";
 
 function Activities() {
-  const { id } = useParams(); // Ambil ID dari URL kalau ada
+  const { id } = useParams(); // Get ID from URL if exists
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const categoryIdFromUrl = queryParams.get("category");
 
-  const [destinations, setDestinations] = useState([]);
+  const [allActivities, setAllActivities] = useState([]);
   const [categories, setCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedActivity, setSelectedActivity] = useState(null);
@@ -28,7 +31,7 @@ function Activities() {
   const [totalActivities, setTotalActivities] = useState(0);
   const itemsPerPage = 3;
 
-  // State for scroll arrows visibility - from Promo component
+  // State for scroll arrows visibility
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
 
@@ -42,8 +45,13 @@ function Activities() {
 
   // Reference for scrollable category container
   const categoryRef = useRef(null);
+  const searchInputRef = useRef(null);
 
-  // Function to check scroll position - from Promo component
+  // Use the custom search hook with activities data
+  const { searchTerm, setSearchTerm, filteredData, resetSearch, isSearching } =
+    useActivitiesSearch(allActivities);
+
+  // Function to check scroll position
   const checkScrollPosition = () => {
     const container = categoryRef.current;
     if (!container) return;
@@ -58,7 +66,7 @@ function Activities() {
     setShowRightArrow(!isAtEnd);
   };
 
-  // Fetch categories from API (integration with categoryService)
+  // Fetch categories from API
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -75,34 +83,51 @@ function Activities() {
   // Fetch activities based on category or all activities
   useEffect(() => {
     const fetchActivities = async () => {
-      let activitiesData;
+      try {
+        let activitiesData;
 
-      if (categoryIdFromUrl) {
-        setSelectedCategory(categoryIdFromUrl);
-        activitiesData = await getActivitiesByCategory(categoryIdFromUrl);
-      } else {
-        activitiesData = await getAllActivities();
+        if (categoryIdFromUrl) {
+          setSelectedCategory(categoryIdFromUrl);
+          activitiesData = await getActivitiesByCategory(categoryIdFromUrl);
+        } else {
+          activitiesData = await getAllActivities();
+        }
+
+        setAllActivities(activitiesData);
+      } catch (err) {
+        console.error("Error fetching activities:", err);
       }
-
-      setDestinations(activitiesData);
-      setTotalActivities(activitiesData.length);
     };
 
     fetchActivities();
   }, [categoryIdFromUrl]);
 
+  // Update total activities when filtered data changes
+  useEffect(() => {
+    setTotalActivities(filteredData.length);
+    // Reset to first page when search results change
+    if (isSearching) {
+      setCurrentPage(1);
+    }
+  }, [filteredData, isSearching]);
+
+  // Fetch detail if ID is present
   useEffect(() => {
     const fetchDetailIfNeeded = async () => {
       if (id) {
-        const detail = await getActivityById(id);
-        setSelectedActivity(detail);
+        try {
+          const detail = await getActivityById(id);
+          setSelectedActivity(detail);
+        } catch (err) {
+          console.error("Error fetching activity details:", err);
+        }
       }
     };
 
     fetchDetailIfNeeded();
   }, [id]);
 
-  // Setup scroll event listeners and initial check - from Promo component
+  // Setup scroll event listeners and initial check
   useEffect(() => {
     const container = categoryRef.current;
     if (container && !id) {
@@ -129,16 +154,19 @@ function Activities() {
   }, [categories, id, location.pathname]); // Re-run when data, id, or location changes
 
   const handleCategorySelect = async (categoryId) => {
+    // Reset search when changing categories
+    resetSearch();
+
     if (selectedCategory === categoryId) {
       setSelectedCategory(null);
       const activitiesData = await getAllActivities();
-      setDestinations(activitiesData);
+      setAllActivities(activitiesData);
       // Update URL to remove category parameter
       navigate("/activities");
     } else {
       setSelectedCategory(categoryId);
       const filteredActivities = await getActivitiesByCategory(categoryId);
-      setDestinations(filteredActivities);
+      setAllActivities(filteredActivities);
       // Update URL with category parameter
       navigate(`/activities?category=${categoryId}`);
     }
@@ -158,6 +186,14 @@ function Activities() {
     }
   };
 
+  const handleClearSearch = () => {
+    resetSearch();
+    // Focus the search input after clearing
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  };
+
   // Calculate total pages based on totalActivities
   const totalPages = Math.ceil(totalActivities / itemsPerPage);
 
@@ -165,7 +201,7 @@ function Activities() {
   const startIndex = (currentPage - 1) * itemsPerPage;
 
   // Slice the destinations based on current page
-  const visibleDestinations = destinations.slice(
+  const visibleDestinations = filteredData.slice(
     startIndex,
     startIndex + itemsPerPage
   );
@@ -194,12 +230,12 @@ function Activities() {
     e.target.src = defaultImage;
   };
 
-  // Function to scroll categories left - from Promo component
+  // Function to scroll categories left
   const scrollLeft = () => {
     categoryRef.current?.scrollBy({ left: -200, behavior: "smooth" });
   };
 
-  // Function to scroll categories right - from Promo component
+  // Function to scroll categories right
   const scrollRight = () => {
     categoryRef.current?.scrollBy({ left: 200, behavior: "smooth" });
   };
@@ -313,7 +349,33 @@ function Activities() {
             Travel <span className="text-primary">Activity</span>
           </h1>
 
-          {/* Categories with Scroll and Arrow Buttons - improved with Promo logic */}
+          {/* Search Bar */}
+          <div className="relative mb-6">
+            <div className="relative">
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search activities by name, description, city..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              />
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Categories with Scroll and Arrow Buttons */}
           <div className="relative mb-6">
             {categories.length > 0 && showLeftArrow && (
               <button
@@ -354,19 +416,36 @@ function Activities() {
             )}
           </div>
 
-          {destinations.length === 0 ? (
+          {/* Search Results Summary */}
+          {isSearching && (
+            <div className="mb-4 px-4 py-2 bg-primary/10 border border-primary rounded-lg text-sm text-primary">
+              Found {filteredData.length} results for "{searchTerm}"
+              <button
+                onClick={handleClearSearch}
+                className="ml-2 text-primary hover:text-primary hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          {filteredData.length === 0 ? (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
               <div className="text-gray-500 mb-2">
-                No activities available at this time
+                {isSearching
+                  ? `No activities found matching "${searchTerm}"`
+                  : "No activities available at this time"}
               </div>
               <button
                 onClick={() => {
                   setSelectedCategory(null);
-                  getAllActivities();
+                  resetSearch();
+                  getAllActivities().then((data) => setAllActivities(data));
+                  navigate("/activities");
                 }}
                 className="px-4 py-2 bg-primary text-white rounded-md hover:border-primary hover:bg-transparent hover:text-primary border border-primary transition-colors cursor-pointer"
               >
-                Reload
+                {isSearching ? "Clear Search" : "Reload"}
               </button>
             </div>
           ) : (
@@ -428,7 +507,12 @@ function Activities() {
               {/* Displaying total activities */}
               <div className="total-activities mt-4 text-center">
                 <p className="text-gray-600">
-                  Total Activities: {totalActivities}
+                  {isSearching
+                    ? `Showing ${Math.min(
+                        filteredData.length,
+                        visibleDestinations.length
+                      )} of ${filteredData.length} search results`
+                    : `Total Activities: ${totalActivities}`}
                 </p>
               </div>
             </>

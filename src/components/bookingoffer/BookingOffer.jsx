@@ -3,9 +3,7 @@ import {
   ChevronLeft,
   X,
   ShoppingCart,
-  CheckCircle,
-  Bed,
-  Square,
+  Check,
   Eye,
   Calendar,
 } from "lucide-react";
@@ -19,26 +17,21 @@ function BookingOffer({ activity, onClose }) {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [startDate, setStartDate] = useState(getTomorrowDate());
+  const [endDate, setEndDate] = useState(getDateAfterTomorrow());
 
-  // Tambahkan state untuk tanggal check-in dan check-out
-  const [checkInDate, setCheckInDate] = useState(getTomorrowDate());
-  const [checkOutDate, setCheckOutDate] = useState(getDateAfterTomorrow());
-
-  // Fungsi untuk mendapatkan tanggal besok
   function getTomorrowDate() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split("T")[0];
   }
 
-  // Fungsi untuk mendapatkan tanggal lusa
   function getDateAfterTomorrow() {
     const dayAfterTomorrow = new Date();
     dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
     return dayAfterTomorrow.toISOString().split("T")[0];
   }
 
-  // Fungsi untuk memformat tanggal ke format Indonesia
   function formatDateIndonesian(dateString) {
     const options = {
       weekday: "long",
@@ -49,36 +42,29 @@ function BookingOffer({ activity, onClose }) {
     return new Date(dateString).toLocaleDateString("id-ID", options);
   }
 
-  // Fungsi untuk menghitung jumlah malam
-  function calculateNights() {
-    const startDate = new Date(checkInDate);
-    const endDate = new Date(checkOutDate);
-    const timeDiff = Math.abs(endDate - startDate);
+  function calculateDuration() {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const timeDiff = Math.abs(end - start);
     return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
   }
 
-  // Tangani perubahan tanggal check-in
-  const handleCheckInChange = (e) => {
-    const newCheckIn = e.target.value;
-    setCheckInDate(newCheckIn);
-
-    // Pastikan check-out minimal 1 hari setelah check-in
-    const checkInDateObj = new Date(newCheckIn);
-    const nextDay = new Date(checkInDateObj);
-    nextDay.setDate(checkInDateObj.getDate() + 1);
+  const handleStartDateChange = (e) => {
+    const newStartDate = e.target.value;
+    setStartDate(newStartDate);
+    const startDateObj = new Date(newStartDate);
+    const nextDay = new Date(startDateObj);
+    nextDay.setDate(startDateObj.getDate() + 1);
     const nextDayString = nextDay.toISOString().split("T")[0];
-
-    if (new Date(checkOutDate) <= new Date(newCheckIn)) {
-      setCheckOutDate(nextDayString);
+    if (new Date(endDate) <= new Date(newStartDate)) {
+      setEndDate(nextDayString);
     }
   };
 
-  // Tangani perubahan tanggal check-out
-  const handleCheckOutChange = (e) => {
-    setCheckOutDate(e.target.value);
+  const handleEndDateChange = (e) => {
+    setEndDate(e.target.value);
   };
 
-  // Tangani error jika useCartAPI tidak dalam CartProvider
   let cartAPI;
   try {
     cartAPI = useCartAPI();
@@ -86,51 +72,52 @@ function BookingOffer({ activity, onClose }) {
     console.error("useCartAPI error:", error.message);
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg p-4">
-          <h2 className="text-xl font-semibold text-red-500">Error</h2>
-          <p className="text-gray-600">
-            Komponen ini harus digunakan dalam CartProvider. Hubungi
-            administrator.
+        <div className="bg-white rounded-lg p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-red-600">Error</h2>
+          <p className="text-gray-600 mt-2">
+            This component must be used within a CartProvider. Please contact
+            the administrator.
           </p>
           <button
+            type="button"
+            tabIndex={-1}
             onClick={onClose}
-            className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md"
+            className="mt-4 bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors"
           >
-            Tutup
+            Close
           </button>
         </div>
       </div>
     );
   }
 
-  const { addToCart, isLoading: cartIsLoading } = cartAPI;
+  const { addToCart, isLoading: cartIsLoading, fetchCartItems } = cartAPI;
 
-  // Calculate original and discounted prices
   const originalPrice = activity?.price || 0;
   const discountedPrice =
     activity?.price_discount && activity.price_discount < originalPrice
       ? activity.price_discount
       : originalPrice;
 
-  // Calculate discount percentage if applicable
   const discountPercentage =
     originalPrice && discountedPrice < originalPrice
       ? Math.round((1 - discountedPrice / originalPrice) * 100)
       : 0;
 
-  // Calculate cashback amount using constant
   const cashbackAmount = Math.round(discountedPrice * CASHBACK_PERCENTAGE);
 
-  // Format currency
   const formatCurrency = (amount) => {
-    return `Rp ${amount?.toLocaleString("id-ID") || "0"}`;
+    return `IDR ${amount?.toLocaleString("id-ID") || "0"}`;
   };
 
-  // Calculate final amount based on nights
-  const nights = calculateNights();
-  const getTotalPrice = () => discountedPrice * quantity * nights;
+  const getImageUrl = (img) => {
+    return img && img.trim() !== "" ? img : "https://picsum.photos/800/400";
+  };
+
+  const duration = calculateDuration();
+  const getTotalPrice = () => discountedPrice * quantity * duration;
   const getFinalPrice = () => getTotalPrice();
-  const pricePerNight = discountedPrice; // Harga per malam
+  const pricePerUnit = discountedPrice;
 
   const decreaseQuantity = () => {
     if (quantity > 1) setQuantity(quantity - 1);
@@ -145,24 +132,29 @@ function BookingOffer({ activity, onClose }) {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Prepare cart item payload with dates and quantity
   const prepareCartPayload = (qty = 1) => {
     if (!activity?.id) {
-      throw new Error("ID aktivitas tidak valid");
+      throw new Error("Invalid activity ID");
     }
-    if (!checkInDate || !checkOutDate) {
-      throw new Error("Tanggal check-in atau check-out tidak valid");
+    if (!startDate || !endDate) {
+      throw new Error("Invalid start or end date");
     }
     const payload = {
       activityId: activity.id,
       quantity: qty,
       bookingDate: {
-        checkIn: checkInDate,
-        checkOut: checkOutDate,
+        start: startDate,
+        end: endDate,
       },
+      price: discountedPrice,
+      title: activity.name || activity.title || "Unnamed Item",
+      imageUrl: activity.images?.[0] || "https://picsum.photos/200",
+      address: activity.address || "",
+      rating: activity.rating || 0,
+      totalReviews: activity.total_reviews || 0,
     };
     console.log(
-      `BookingOffer prepareCartPayload for activityId: ${activity.id}`,
+      `BookingOffer prepareCartPayload for activityId: ${activity.id}, quantity: ${qty}, dates: ${startDate} - ${endDate}`,
       JSON.stringify(payload, null, 2)
     );
     return payload;
@@ -171,19 +163,18 @@ function BookingOffer({ activity, onClose }) {
   const handleAddToCart = async () => {
     setIsLoading(true);
     try {
-      // Validasi data
       if (!activity?.id) {
-        throw new Error("Data aktivitas tidak valid");
+        throw new Error("Invalid activity data");
       }
       console.log(
         `BookingOffer handleAddToCart for activityId: ${activity.id}, quantity: ${quantity}`
       );
 
-      // Kirim permintaan addToCart terpisah untuk setiap unit
       const addPromises = [];
       for (let i = 0; i < quantity; i++) {
         const payload = prepareCartPayload(1);
-        addPromises.push(addToCart(payload));
+        const result = await addToCart(payload);
+        addPromises.push(result);
       }
       const results = await Promise.all(addPromises);
       console.log(
@@ -191,57 +182,48 @@ function BookingOffer({ activity, onClose }) {
         JSON.stringify(results, null, 2)
       );
 
-      // Periksa setiap hasil
       const failedRequests = results.filter(
-        (result) => String(result.code) !== "200"
+        (result) => String(result?.code) !== "200"
       );
       if (failedRequests.length > 0) {
         console.error("Some addToCart requests failed:", failedRequests);
         throw new Error(
-          `Gagal menambahkan ${failedRequests.length} item ke keranjang`
+          `Failed to add ${failedRequests.length} item(s) to cart`
         );
       }
 
-      // Simpan bookingDate di localStorage sebagai fallback
       localStorage.setItem(
         `bookingDate_${activity.id}`,
         JSON.stringify({
-          checkIn: checkInDate,
-          checkOut: checkOutDate,
+          start: startDate,
+          end: endDate,
         })
       );
 
-      showToast(
-        `Berhasil menambahkan ${quantity} item ke keranjang`,
-        "success"
-      );
+      await fetchCartItems(); // Perbarui cartItems setelah penambahan
+      showToast(`Successfully added ${quantity} item(s) to cart`, "success");
       setTimeout(() => {
-        window.location.href = "/carts"; // Diarahkan ke /carts
-      }, 1000); // Delay navigasi untuk menampilkan toast
+        window.location.href = "/carts";
+      }, 1000);
     } catch (error) {
-      console.error(
-        `Error menambahkan ke keranjang untuk activityId: ${activity?.id}`,
-        {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-      );
+      console.error(`Error adding to cart for activityId: ${activity?.id}`, {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
 
-      // Tangani error autentikasi (401)
       if (error.response?.status === 401) {
         toast.error("Session expired. Please log in again.", {
           position: "top-right",
         });
         setTimeout(() => {
-          window.location.href = "/login"; // Arahkan ke halaman login
+          window.location.href = "/login";
         }, 1000);
       } else {
         const errorMessage =
           error.message === "Success"
-            ? "Terjadi kesalahan saat menambahkan ke keranjang"
-            : error.message ||
-              "Terjadi kesalahan saat menambahkan ke keranjang";
+            ? "An error occurred while adding to cart"
+            : error.message || "An error occurred while adding to cart";
         showToast(errorMessage, "error");
       }
     } finally {
@@ -252,19 +234,18 @@ function BookingOffer({ activity, onClose }) {
   const handleBookNow = async () => {
     setIsLoading(true);
     try {
-      // Validasi data
       if (!activity?.id) {
-        throw new Error("Data aktivitas tidak valid");
+        throw new Error("Invalid activity data");
       }
       console.log(
         `BookingOffer handleBookNow for activityId: ${activity.id}, quantity: ${quantity}`
       );
 
-      // Kirim permintaan addToCart terpisah untuk setiap unit
       const addPromises = [];
       for (let i = 0; i < quantity; i++) {
         const payload = prepareCartPayload(1);
-        addPromises.push(addToCart(payload));
+        const result = await addToCart(payload);
+        addPromises.push(result);
       }
       const results = await Promise.all(addPromises);
       console.log(
@@ -272,48 +253,60 @@ function BookingOffer({ activity, onClose }) {
         JSON.stringify(results, null, 2)
       );
 
-      // Periksa setiap hasil
       const failedRequests = results.filter(
-        (result) => String(result.code) !== "200"
+        (result) => String(result?.code) !== "200"
       );
       if (failedRequests.length > 0) {
         console.error("Some bookNow requests failed:", failedRequests);
-        throw new Error(`Gagal memproses ${failedRequests.length} item`);
+        throw new Error(`Failed to process ${failedRequests.length} item(s)`);
       }
 
-      // Simpan bookingDate di localStorage sebagai fallback
-      localStorage.setItem(
-        `bookingDate_${activity.id}`,
-        JSON.stringify({
-          checkIn: checkInDate,
-          checkOut: checkOutDate,
-        })
-      );
+      // Ambil cartItems terbaru dari backend
+      const cartItems = await fetchCartItems();
+      const newCheckoutItems = cartItems
+        .filter((item) => item.activityId === activity.id)
+        .map((item) => ({
+          ...item,
+          ...activity, // Gabungkan properti dari activity
+          title: activity.name || activity.title || "Unnamed Item", // Pastikan title diatur
+          bookingDate: {
+            start: startDate,
+            end: endDate,
+          },
+          quantity: quantity, // Pastikan quantity sesuai
+          price: discountedPrice, // Gunakan harga yang dihitung
+          imageUrl: activity.images?.[0] || "https://picsum.photos/200",
+        }));
 
-      showToast(`Pemesanan ${quantity} item berhasil diproses`, "success");
+      // Simpan ke localStorage sebagai checkoutItems
+      localStorage.setItem("checkoutItems", JSON.stringify(newCheckoutItems));
+
+      showToast(
+        `Successfully processed booking for ${quantity} item(s)`,
+        "success"
+      );
       setTimeout(() => {
-        window.location.href = "/checkout"; // Tetap ke /checkout
-      }, 1000); // Delay navigasi untuk menampilkan toast
+        window.location.href = "/checkout";
+      }, 1000);
     } catch (error) {
-      console.error(`Error memesan untuk activityId: ${activity?.id}`, {
+      console.error(`Error booking for activityId: ${activity?.id}`, {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
       });
 
-      // Tangani error autentikasi (401)
       if (error.response?.status === 401) {
         toast.error("Session expired. Please log in again.", {
           position: "top-right",
         });
         setTimeout(() => {
-          window.location.href = "/login"; // Arahkan ke halaman login
+          window.location.href = "/login";
         }, 1000);
       } else {
         const errorMessage =
           error.message === "Success"
-            ? "Terjadi kesalahan saat memproses pemesanan"
-            : error.message || "Terjadi kesalahan saat memproses pemesanan";
+            ? "An error occurred while processing booking"
+            : error.message || "An error occurred while processing booking";
         showToast(errorMessage, "error");
       }
     } finally {
@@ -321,7 +314,6 @@ function BookingOffer({ activity, onClose }) {
     }
   };
 
-  // Debugging log
   console.log("BookingOffer activity:", JSON.stringify(activity, null, 2));
 
   return (
@@ -334,31 +326,37 @@ function BookingOffer({ activity, onClose }) {
         />
       )}
 
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-screen overflow-y-auto">
+      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg">
         {/* Header */}
         <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between z-10">
           <div className="flex items-center">
             <button
+              type="button"
+              tabIndex={-1}
               onClick={onClose}
-              className="mr-3 hover:bg-gray-100 p-1 rounded-full"
+              className="mr-3 hover:bg-gray-100 p-2 rounded-full"
             >
-              <ChevronLeft size={24} />
+              <ChevronLeft size={20} />
             </button>
             <div>
-              <h2 className="text-xl font-semibold">{activity?.title}</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {activity?.name || activity?.title}
+              </h2>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <span>
                   {activity?.rating?.label || ROOM_DETAILS.rating.label}
                 </span>
-                <span className="bg-orange-500 text-white px-2 py-0.5 rounded-full">
+                <span className="bg-teal-600 text-white px-2 py-0.5 rounded-full">
                   {activity?.rating?.value || ROOM_DETAILS.rating.value}
                 </span>
               </div>
             </div>
           </div>
           <button
+            type="button"
+            tabIndex={-1}
             onClick={onClose}
-            className="hover:bg-gray-100 p-1 rounded-full"
+            className="hover:bg-gray-100 p-2 rounded-full"
           >
             <X size={20} />
           </button>
@@ -366,184 +364,196 @@ function BookingOffer({ activity, onClose }) {
 
         {/* Content */}
         <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Bagian Kiri: Informasi Kamar */}
+          {/* Left Section: Activity Information */}
           <div className="col-span-1">
-            {/* Placeholder Gambar */}
-            <div className="bg-gray-200 h-48 rounded-lg flex items-center justify-center">
-              <span className="text-gray-500">Gambar Kamar</span>
+            {/* Image */}
+            <div className="bg-gray-100 h-48 rounded-lg overflow-hidden">
+              <img
+                src={getImageUrl(activity?.images?.[0])}
+                alt={activity?.name || "Activity"}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = "https://picsum.photos/800/400";
+                }}
+              />
             </div>
-            <button className="mt-2 text-blue-500 hover:underline flex items-center gap-1 text-sm">
+            <button
+              type="button"
+              tabIndex={-1}
+              className="mt-2 text-teal-600 hover:text-teal-800 flex items-center gap-1 text-sm transition-colors"
+            >
               <Eye size={16} />
               {ROOM_DETAILS.buttons.viewDetails}
             </button>
 
-            {/* Detail Kamar */}
-            <div className="mt-4 space-y-2 text-sm text-gray-700">
+            {/* Details */}
+            <div className="mt-4 space-y-2 text-sm text-gray-600">
               <div className="flex items-center gap-2">
-                <Bed size={16} />
-                <span>{activity?.bedType || ROOM_DETAILS.bedType}</span>
+                <span className="text-gray-500">📏</span>
+                <span>{activity?.size || ROOM_DETAILS.size}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Square size={16} />
-                <span>
-                  Ukuran kamar: {activity?.roomSize || ROOM_DETAILS.roomSize}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>🖼️</span>
-                <span>Pemandangan: {activity?.view || ROOM_DETAILS.view}</span>
+                <span className="text-gray-500">🌄</span>
+                <span>{activity?.view || ROOM_DETAILS.view}</span>
               </div>
             </div>
 
-            {/* Tanggal Pemesanan */}
-            <div className="mt-6 border rounded-lg p-4 bg-blue-50">
+            {/* Booking Dates */}
+            <div className="mt-6 border border-gray-100 rounded-lg p-4 bg-teal-50">
               <div className="flex items-center gap-2 mb-3">
-                <Calendar size={18} className="text-blue-600" />
-                <h3 className="font-medium text-blue-800">Tanggal Menginap</h3>
+                <Calendar size={18} className="text-teal-600" />
+                <h3 className="text-xl font-semibold text-teal-600">
+                  Booking Period
+                </h3>
               </div>
-
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">
-                    Check-in
+                    Start Date
                   </label>
                   <input
                     type="date"
-                    value={checkInDate}
+                    value={startDate}
                     min={getTomorrowDate()}
-                    onChange={handleCheckInChange}
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={handleStartDateChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    {formatDateIndonesian(checkInDate)}
+                    {formatDateIndonesian(startDate)}
                   </p>
                 </div>
-
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">
-                    Check-out
+                    End Date
                   </label>
                   <input
                     type="date"
-                    value={checkOutDate}
-                    min={new Date(checkInDate).toISOString().split("T")[0]}
-                    onChange={handleCheckOutChange}
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={endDate}
+                    min={new Date(startDate).toISOString().split("T")[0]}
+                    onChange={handleEndDateChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    {formatDateIndonesian(checkOutDate)}
+                    {formatDateIndonesian(endDate)}
                   </p>
                 </div>
-
                 <div className="pt-2 border-t">
                   <p className="text-sm font-medium">
-                    Durasi:{" "}
-                    <span className="text-blue-600">{nights} malam</span>
+                    Duration:{" "}
+                    <span className="text-teal-600">{duration} day(s)</span>
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Fasilitas */}
-            <div className="mt-4 space-y-2 text-sm text-gray-700">
-              {Array.isArray(activity?.facilities || ROOM_DETAILS.facilities)
-                ? (activity?.facilities || ROOM_DETAILS.facilities).map(
-                    (facility, index) => (
+            {/* Features */}
+            <div className="mt-4 space-y-2 text-sm text-gray-600">
+              {Array.isArray(activity?.features || ROOM_DETAILS.features)
+                ? (activity?.features || ROOM_DETAILS.features).map(
+                    (feature, index) => (
                       <div
                         key={index}
                         className={`flex items-center gap-2 ${
-                          facility.status === "positive"
-                            ? "text-green-600"
+                          feature.status === "positive"
+                            ? "text-teal-600"
                             : "text-red-600"
                         }`}
                       >
-                        <CheckCircle size={16} />
-                        <span>{facility.label}</span>
+                        <Check size={16} />
+                        <span>{feature.label}</span>
                       </div>
                     )
                   )
-                : ROOM_DETAILS.facilities.map((facility, index) => (
+                : ROOM_DETAILS.features.map((feature, index) => (
                     <div
                       key={index}
                       className={`flex items-center gap-2 ${
-                        facility.status === "positive"
-                          ? "text-green-600"
+                        feature.status === "positive"
+                          ? "text-teal-600"
                           : "text-red-600"
                       }`}
                     >
-                      <CheckCircle size={16} />
-                      <span>{facility.label}</span>
+                      <Check size={16} />
+                      <span>{feature.label}</span>
                     </div>
                   ))}
             </div>
           </div>
 
-          {/* Bagian Tengah: Promosi */}
+          {/* Middle Section: Promotions */}
           <div className="col-span-1">
-            <div className="bg-orange-100 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-orange-600">
+            <div className="bg-teal-50 p-4 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-teal-600">
                 {ROOM_DETAILS.promotion.title}
               </h3>
-              <ul className="mt-2 space-y-2 text-sm text-gray-700">
+              <ul className="mt-2 space-y-2 text-sm text-gray-600">
                 {ROOM_DETAILS.promotion.items.map((item, index) => (
                   <li key={index} className="flex items-center gap-2">
-                    <CheckCircle size={16} className="text-green-600" />
+                    <Check size={16} className="text-teal-600" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
             <div className="mt-4 flex items-center gap-2 text-sm">
-              <span className="text-gray-700">
+              <span className="text-gray-600">
                 {ROOM_DETAILS.labels.cashback}
               </span>
-              <span className="text-orange-600 font-semibold">
+              <span className="text-teal-600 font-semibold">
                 {formatCurrency(cashbackAmount)}
               </span>
             </div>
           </div>
 
-          {/* Bagian Kanan: Harga dan Tombol */}
+          {/* Right Section: Price and Buttons */}
           <div className="col-span-1">
-            {/* Harga */}
+            {/* Price */}
             <div className="space-y-2">
-              <p className="text-sm text-gray-500 line-through">
-                {formatCurrency(originalPrice)} digunakan
-              </p>
+              {originalPrice > discountedPrice && (
+                <p className="text-sm text-gray-500 line-through">
+                  {formatCurrency(originalPrice)}
+                </p>
+              )}
               <p className="text-2xl font-bold text-gray-800">
                 {formatCurrency(discountedPrice)}{" "}
-                <span className="text-red-600">-{discountPercentage}%</span>
+                {discountPercentage > 0 && (
+                  <span className="text-red-600">-{discountPercentage}%</span>
+                )}
               </p>
-              <p className="text-lg text-blue-600">
-                {nights} malam: {formatCurrency(discountedPrice * nights)}
+              <p className="text-lg text-teal-600">
+                {duration} day(s): {formatCurrency(discountedPrice * duration)}
               </p>
               <p className="text-xl font-semibold text-gray-800">
                 Total: {formatCurrency(getFinalPrice())}
               </p>
               <p className="text-sm text-gray-500">
-                Harga sudah termasuk pajak & biaya layanan
+                Price includes taxes & service fees
               </p>
-              <p className="text-sm text-gray-700">
-                {formatCurrency(pricePerNight)}{" "}
+              <p className="text-sm text-gray-600">
+                {formatCurrency(pricePerUnit)}{" "}
                 <span className="text-gray-500">
-                  {ROOM_DETAILS.labels.pricePerNight}
+                  {ROOM_DETAILS.labels.pricePerUnit}
                 </span>
               </p>
             </div>
 
-            {/* Kuantitas */}
+            {/* Quantity */}
             <div className="mt-4">
-              <p className="text-sm text-gray-700 mb-1">Jumlah Kamar:</p>
+              <p className="text-sm text-gray-600 mb-1">Number of Items:</p>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
+                  tabIndex={-1}
                   onClick={decreaseQuantity}
-                  className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                  className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 disabled:opacity-50"
                   disabled={quantity <= 1}
                 >
                   -
                 </button>
                 <span className="text-lg font-medium">{quantity}</span>
                 <button
+                  type="button"
+                  tabIndex={-1}
                   onClick={increaseQuantity}
                   className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
                 >
@@ -552,28 +562,30 @@ function BookingOffer({ activity, onClose }) {
               </div>
             </div>
 
-            {/* Tombol */}
+            {/* Buttons */}
             <div className="mt-4 space-y-3">
               <button
+                type="button"
+                tabIndex={-1}
                 onClick={handleBookNow}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 rounded-md font-medium"
+                className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors disabled:opacity-50"
                 disabled={isLoading || cartIsLoading}
               >
-                {isLoading || cartIsLoading ? "Memproses..." : "Pesan sekarang"}
+                {isLoading || cartIsLoading ? "Processing..." : "Book Now"}
               </button>
               <button
+                type="button"
+                tabIndex={-1}
                 onClick={handleAddToCart}
-                className="w-full bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 py-3 px-6 rounded-md font-medium flex items-center justify-center"
+                className="w-full bg-white border border-teal-600 text-teal-600 py-3 px-4 rounded-lg font-medium hover:bg-teal-50 transition-colors disabled:opacity-50 flex items-center justify-center"
                 disabled={isLoading || cartIsLoading}
               >
                 {isLoading || cartIsLoading ? (
-                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <div className="w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mr-2"></div>
                 ) : (
                   <ShoppingCart className="mr-2" size={18} />
                 )}
-                {isLoading || cartIsLoading
-                  ? "Menambahkan..."
-                  : "Tambah ke troli"}
+                {isLoading || cartIsLoading ? "Adding..." : "Add to Cart"}
               </button>
               <p className="text-sm text-gray-600 text-center">
                 {ROOM_DETAILS.labels.bookingTime}
@@ -585,12 +597,14 @@ function BookingOffer({ activity, onClose }) {
         {/* Footer */}
         <div className="p-4 border-t flex justify-center">
           <button
+            type="button"
+            tabIndex={-1}
             onClick={handleBookNow}
-            className="bg-green-500 text-white py-2 px-4 rounded-md flex items-center gap-2"
+            className="bg-teal-600 text-white py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-teal-700 transition-colors disabled:opacity-50"
             disabled={isLoading || cartIsLoading}
           >
-            <span>{ROOM_DETAILS.labels.lastRoom}</span>
-            <span className="bg-green-700 text-white px-2 py-1 rounded text-xs">
+            <span>{ROOM_DETAILS.labels.lastItem}</span>
+            <span className="bg-teal-800 text-white px-2 py-1 rounded text-xs">
               {ROOM_DETAILS.labels.noRisk}
             </span>
           </button>
