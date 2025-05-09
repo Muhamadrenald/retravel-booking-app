@@ -2,7 +2,7 @@
 
 # React + Vite | Tailwindcss + API Travel
 
-This is a user management system web project that I made myself. This web uses the API [reqres](https://reqres.in/).
+This is a Travel system web project that I made myself. This web uses the API Travel.
 
 ## 🔗 Features
 
