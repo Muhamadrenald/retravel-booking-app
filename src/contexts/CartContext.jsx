@@ -130,9 +130,9 @@ export const CartProvider = ({ children }) => {
   const checkLoginStatus = () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      toast.info("Anda perlu login untuk menggunakan fitur ini", {
-        position: "top-right",
-      });
+      // toast.info("You need to login to use this feature", {
+      //   position: "top-right",
+      // });
       setTimeout(() => {
         window.location.href = "/login";
       }, 1000);

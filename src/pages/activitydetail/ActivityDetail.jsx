@@ -474,7 +474,7 @@ function ActivityDetail() {
                           onClick={handleViewOfferClick}
                           className="w-full py-3 px-4 rounded-lg bg-teal-600 text-white font-medium hover:bg-teal-700 transition-colors"
                         >
-                          Book Now
+                          View Offer
                         </button>
                       </div>
                     </div>

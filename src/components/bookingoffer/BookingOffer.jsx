@@ -258,7 +258,9 @@ function BookingOffer({ activity, onClose }) {
       );
       if (failedRequests.length > 0) {
         console.error("Some bookNow requests failed:", failedRequests);
-        throw new Error(`Failed to process ${failedRequests.length} item(s)`);
+        throw new Error(
+          `Failed to process ${failedRequests.length} item(s). Please log in first.`
+        );
       }
 
       // Ambil cartItems terbaru dari backend
@@ -437,12 +439,12 @@ function BookingOffer({ activity, onClose }) {
                     {formatDateIndonesian(endDate)}
                   </p>
                 </div>
-                <div className="pt-2 border-t">
+                {/* <div className="pt-2 border-t">
                   <p className="text-sm font-medium">
                     Duration:{" "}
                     <span className="text-teal-600">{duration} day(s)</span>
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -521,7 +523,7 @@ function BookingOffer({ activity, onClose }) {
                 )}
               </p>
               <p className="text-lg text-teal-600">
-                {duration} day(s): {formatCurrency(discountedPrice * duration)}
+                {duration} item(s): {formatCurrency(discountedPrice * duration)}
               </p>
               <p className="text-xl font-semibold text-gray-800">
                 Total: {formatCurrency(getFinalPrice())}

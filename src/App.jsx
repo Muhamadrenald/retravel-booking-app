@@ -36,6 +36,7 @@ import BannersTable from "./pages/admin/bannerstable/BannersTable";
 import ActivitiesTable from "./pages/admin/activitiestable/ActivitiesTable";
 import MainDashboard from "./pages/admin/maindashboard/MainDashboard";
 import AdminTransaction from "./pages/admin/transaction/AdminTransaction";
+import Profile from "./pages/profile/Profile";
 
 const App = () => {
   return (
@@ -62,6 +63,8 @@ const App = () => {
             <Route path="/promo" element={<Promo />} />
             <Route path="/carts" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/profile" element={<Profile />} />
+
             {/* Protected routes for authenticated users */}
             <Route element={<ProtectedRoute />}>
               <Route path="/ticket" element={<Ticket />} />

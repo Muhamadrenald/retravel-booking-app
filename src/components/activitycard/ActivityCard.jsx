@@ -10,6 +10,12 @@ const ActivityCard = ({ activity, onClick, handleImageError }) => {
     return `IDR ${amount?.toLocaleString("id-ID") || "0"}`;
   };
 
+  // Calculate discount percentage
+  const discountPercentage =
+    activity?.originalPrice && activity?.priceDiscount
+      ? Math.round((1 - activity.priceDiscount / activity.originalPrice) * 100)
+      : 0;
+
   console.log("ActivityCard activity:", JSON.stringify(activity, null, 2));
 
   return (
@@ -18,17 +24,24 @@ const ActivityCard = ({ activity, onClick, handleImageError }) => {
       tabIndex={-1}
       className="cursor-pointer bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition"
     >
-      <img
-        src={getImageUrl(activity.image)}
-        alt={activity.name}
-        className="h-48 w-full object-cover rounded-t-lg"
-        onError={
-          handleImageError ||
-          ((e) => {
-            e.target.src = "https://picsum.photos/800/400";
-          })
-        }
-      />
+      <div className="relative">
+        <img
+          src={getImageUrl(activity.image)}
+          alt={activity.name}
+          className="h-48 w-full object-cover rounded-t-lg"
+          onError={
+            handleImageError ||
+            ((e) => {
+              e.target.src = "https://picsum.photos/800/400";
+            })
+          }
+        />
+        {discountPercentage > 0 && (
+          <div className="absolute top-2 right-2 bg-teal-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
+            Save {discountPercentage}%
+          </div>
+        )}
+      </div>
       <div className="p-4">
         <h3 className="text-lg font-bold text-gray-800 mb-2">
           {activity.name}

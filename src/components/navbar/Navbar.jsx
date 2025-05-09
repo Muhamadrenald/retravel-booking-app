@@ -9,7 +9,6 @@ const Navbar = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [open, setOpen] = useState(false);
-  const [ticketDropdown, setTicketDropdown] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
   const navigate = useNavigate();
 
@@ -26,26 +25,17 @@ const Navbar = () => {
 
   const handleOpen = () => {
     setOpen(!open);
-    setTicketDropdown(false);
     setUserDropdown(false);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setTicketDropdown(false);
-    setUserDropdown(false);
-  };
-
-  const toggleTicketDropdown = (e) => {
-    e.stopPropagation();
-    setTicketDropdown(!ticketDropdown);
     setUserDropdown(false);
   };
 
   const toggleUserDropdown = (e) => {
     e.stopPropagation();
     setUserDropdown(!userDropdown);
-    setTicketDropdown(false);
   };
 
   const handleLogout = async () => {
@@ -72,16 +62,13 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (ticketDropdown && !event.target.closest(".ticket-dropdown")) {
-        setTicketDropdown(false);
-      }
       if (userDropdown && !event.target.closest(".user-dropdown")) {
         setUserDropdown(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [ticketDropdown, userDropdown]);
+  }, [userDropdown]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -128,63 +115,15 @@ const Navbar = () => {
         >
           <ul className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 text-lg text-neutral-500 font-normal">
             {navItems.map((item, index) => (
-              <li
-                key={index}
-                className={item.hasDropdown ? "relative ticket-dropdown" : ""}
-              >
-                {item.hasDropdown ? (
-                  <>
-                    <button
-                      onClick={toggleTicketDropdown}
-                      className="hover:text-red-500 transition duration-300 flex items-center gap-1"
-                    >
-                      {item.label}
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className={`h-4 w-4 transition-transform ${
-                          ticketDropdown ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
-                    {ticketDropdown && (
-                      <div className="md:absolute top-full left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-                        <div className="py-1">
-                          {item.dropdownItems.map(
-                            (dropdownItem, dropdownIndex) => (
-                              <Link
-                                key={dropdownIndex}
-                                to={dropdownItem.link}
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-500"
-                                onClick={handleClose}
-                              >
-                                {dropdownItem.label}
-                              </Link>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <Link
-                    to={item.link}
-                    onClick={handleClose}
-                    className="relative group hover:text-red-500 transition duration-300"
-                  >
-                    {item.label}
-                    <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-red-500 transition-all duration-300 group-hover:w-full"></span>
-                  </Link>
-                )}
+              <li key={index}>
+                <Link
+                  to={item.link}
+                  onClick={handleClose}
+                  className="relative group hover:text-red-500 transition duration-300"
+                >
+                  {item.label}
+                  <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-red-500 transition-all duration-300 group-hover:w-full"></span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -216,7 +155,22 @@ const Navbar = () => {
                   onClick={toggleUserDropdown}
                   className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-normal transition duration-300"
                 >
-                  <FaUser className="text-sm" />
+                  {user?.profilePictureUrl ? (
+                    <img
+                      src={user.profilePictureUrl}
+                      alt="Profile"
+                      className="w-6 h-6 rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "block";
+                      }}
+                    />
+                  ) : null}
+                  <FaUser
+                    className={`text-sm ${
+                      user?.profilePictureUrl ? "hidden" : ""
+                    }`}
+                  />
                   <span className="max-w-24 truncate">{getDisplayName()}</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -252,11 +206,11 @@ const Navbar = () => {
                         My Profile
                       </Link>
                       <Link
-                        to="/transactions"
+                        to="/transaction"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-500"
                         onClick={handleClose}
                       >
-                        My Bookings
+                        My Transactions
                       </Link>
                       <button
                         onClick={handleLogout}
