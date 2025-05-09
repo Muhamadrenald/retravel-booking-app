@@ -148,7 +148,7 @@ const Navbar = () => {
           </div>
 
           {/* User Auth Section */}
-          <div className="mt-4 md:mt-0">
+          <div className="mt-4 md:mt-0 flex flex-col md:flex-row md:items-center gap-4 md:gap-2">
             {isAuthenticated() ? (
               <div className="relative user-dropdown">
                 <button
@@ -223,11 +223,18 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <button className="w-full md:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-normal transition duration-300">
-                <Link to="/login" onClick={handleClose}>
-                  Login
-                </Link>
-              </button>
+              <>
+                <button className="w-full md:w-auto px-4 py-2 bg-red-500 border border-primary hover:bg-transparent hover:text-primary text-white rounded-full font-normal transition duration-300">
+                  <Link to="/login" onClick={handleClose}>
+                    Login
+                  </Link>
+                </button>
+                <button className="w-full md:w-auto px-4 py-2 bg-red-500 border border-primary hover:bg-transparent hover:text-red-500 text-white rounded-full font-normal transition duration-300">
+                  <Link to="/register" onClick={handleClose}>
+                    Register
+                  </Link>
+                </button>
+              </>
             )}
           </div>
         </div>
