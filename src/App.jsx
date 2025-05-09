@@ -37,6 +37,7 @@ import ActivitiesTable from "./pages/admin/activitiestable/ActivitiesTable";
 import MainDashboard from "./pages/admin/maindashboard/MainDashboard";
 import AdminTransaction from "./pages/admin/transaction/AdminTransaction";
 import Profile from "./pages/profile/Profile";
+import PromoDetail from "./pages/promodetail/PromoDetail";
 
 const App = () => {
   return (
@@ -61,6 +62,7 @@ const App = () => {
             <Route path="/activities" element={<Activities />} />
             <Route path="/activities/:id" element={<ActivityDetail />} />
             <Route path="/promo" element={<Promo />} />
+            <Route path="/promos/:id" element={<PromoDetail />} />
             <Route path="/carts" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/profile" element={<Profile />} />

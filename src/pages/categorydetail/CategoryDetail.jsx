@@ -72,8 +72,22 @@ function CategoryDetail() {
         <p className="text-red-500">{error}</p>
         <button
           onClick={() => navigate("/categories")}
-          className="mt-4 px-4 py-2 bg-primary text-white rounded"
+          className="mt-4 flex items-center px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-transparent hover:text-primary hover:border-primary border border-primary transition ease-in-out duration-300"
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
           Back to Categories
         </button>
       </div>
@@ -86,8 +100,22 @@ function CategoryDetail() {
         <p className="text-gray-600">Category not found</p>
         <button
           onClick={() => navigate("/categories")}
-          className="mt-4 px-4 py-2 bg-primary text-white rounded"
+          className="mt-4 flex items-center px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-transparent hover:text-primary hover:border-primary border border-primary transition ease-in-out duration-300"
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
           Back to Categories
         </button>
       </div>
@@ -99,9 +127,23 @@ function CategoryDetail() {
       <div className="mb-6">
         <button
           onClick={() => navigate("/categories")}
-          className="mb-4 px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition"
+          className="cursor-pointer mb-4 flex items-center px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-transparent hover:text-primary hover:border-primary border border-primary transition ease-in-out duration-300"
         >
-          ← Back to Categories
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Back to Categories
         </button>
       </div>
 
