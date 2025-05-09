@@ -43,10 +43,16 @@ function BookingOffer({ activity, onClose }) {
   }
 
   function calculateDuration() {
+    if (!startDate || !endDate) {
+      return 1; // Fallback jika tanggal tidak valid
+    }
     const start = new Date(startDate);
     const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return 1; // Fallback jika tanggal tidak valid
+    }
     const timeDiff = Math.abs(end - start);
-    return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    return Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) || 1; // Pastikan minimal 1 hari
   }
 
   const handleStartDateChange = (e) => {
@@ -95,8 +101,8 @@ function BookingOffer({ activity, onClose }) {
 
   const originalPrice = activity?.price || 0;
   const discountedPrice =
-    activity?.price_discount && activity.price_discount < originalPrice
-      ? activity.price_discount
+    activity?.priceDiscount && activity.priceDiscount < originalPrice
+      ? activity.priceDiscount
       : originalPrice;
 
   const discountPercentage =
@@ -200,7 +206,7 @@ function BookingOffer({ activity, onClose }) {
         })
       );
 
-      await fetchCartItems(); // Perbarui cartItems setelah penambahan
+      await fetchCartItems();
       showToast(`Successfully added ${quantity} item(s) to cart`, "success");
       setTimeout(() => {
         window.location.href = "/carts";
@@ -263,24 +269,22 @@ function BookingOffer({ activity, onClose }) {
         );
       }
 
-      // Ambil cartItems terbaru dari backend
       const cartItems = await fetchCartItems();
       const newCheckoutItems = cartItems
         .filter((item) => item.activityId === activity.id)
         .map((item) => ({
           ...item,
-          ...activity, // Gabungkan properti dari activity
-          title: activity.name || activity.title || "Unnamed Item", // Pastikan title diatur
+          ...activity,
+          title: activity.name || activity.title || "Unnamed Item",
           bookingDate: {
             start: startDate,
             end: endDate,
           },
-          quantity: quantity, // Pastikan quantity sesuai
-          price: discountedPrice, // Gunakan harga yang dihitung
+          quantity: quantity,
+          price: discountedPrice,
           imageUrl: activity.images?.[0] || "https://picsum.photos/200",
         }));
 
-      // Simpan ke localStorage sebagai checkoutItems
       localStorage.setItem("checkoutItems", JSON.stringify(newCheckoutItems));
 
       showToast(
@@ -519,11 +523,14 @@ function BookingOffer({ activity, onClose }) {
               <p className="text-2xl font-bold text-gray-800">
                 {formatCurrency(discountedPrice)}{" "}
                 {discountPercentage > 0 && (
-                  <span className="text-red-600">-{discountPercentage}%</span>
+                  <span className="text-teal-600 font-semibold text-lg">
+                    -{discountPercentage}%
+                  </span>
                 )}
               </p>
               <p className="text-lg text-teal-600">
-                {duration} item(s): {formatCurrency(discountedPrice * duration)}
+                For {duration} item(s):{" "}
+                {formatCurrency(discountedPrice * duration)}
               </p>
               <p className="text-xl font-semibold text-gray-800">
                 Total: {formatCurrency(getFinalPrice())}
@@ -533,15 +540,13 @@ function BookingOffer({ activity, onClose }) {
               </p>
               <p className="text-sm text-gray-600">
                 {formatCurrency(pricePerUnit)}{" "}
-                <span className="text-gray-500">
-                  {ROOM_DETAILS.labels.pricePerUnit}
-                </span>
+                <span className="text-gray-500">per unit per day</span>
               </p>
             </div>
 
             {/* Quantity */}
             <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-1">Number of Items:</p>
+              <p className="text-sm text-gray-600 mb-1">Number of Units:</p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
