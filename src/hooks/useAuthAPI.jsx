@@ -236,7 +236,8 @@ const useAuthAPI = () => {
       let errorMessage = "An error occurred. Please try again.";
       if (error.response?.status === 404) {
         errorMessage =
-          "Login endpoint not found. Please check API configuration or contact support.";
+          // "Login endpoint not found. Please check API configuration or contact support.";
+          "User not found.";
       } else if (error.response?.status === 401) {
         errorMessage = "Invalid email or password.";
       } else if (error.response?.data?.message) {
