@@ -65,10 +65,11 @@ const App = () => {
             <Route path="/promos/:id" element={<PromoDetail />} />
             <Route path="/carts" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/profile" element={<Profile />} />
 
             {/* Protected routes for authenticated users */}
             <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<Profile />} />{" "}
+              {/* Pindahkan ke ProtectedRoute */}
               <Route path="/ticket" element={<Ticket />} />
               <Route path="/ticket/:id" element={<Detail />} />
               <Route path="/invoice/:id" element={<Invoice />} />
@@ -91,6 +92,7 @@ const App = () => {
               <Route path="banners" element={<BannersTable />} />
               <Route path="activities" element={<ActivitiesTable />} />
               <Route path="transactions" element={<AdminTransaction />} />
+              <Route path="profile" element={<Profile />} />{" "}
             </Route>
           </Route>
 

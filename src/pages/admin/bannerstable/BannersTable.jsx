@@ -24,11 +24,10 @@ const BannersTable = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-  const [uploadError, setUploadError] = useState(null); // New state for upload-specific errors
+  const [uploadError, setUploadError] = useState(null);
 
   const bannersPerPage = 10;
 
-  // Fetch banners on component mount
   useEffect(() => {
     fetchBanners();
   }, []);
@@ -86,7 +85,6 @@ const BannersTable = () => {
     }
   };
 
-  // Handle image upload
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -144,13 +142,11 @@ const BannersTable = () => {
     }
   };
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Create new banner
   const createBanner = async () => {
     if (!formData.name.trim()) {
       setError("Banner name is required");
@@ -197,7 +193,6 @@ const BannersTable = () => {
     }
   };
 
-  // Update existing banner
   const updateBanner = async () => {
     if (!formData.name.trim() || !currentBanner) {
       setError("Banner name is required");
@@ -246,7 +241,6 @@ const BannersTable = () => {
     }
   };
 
-  // Delete banner
   const deleteBanner = async () => {
     if (!deleteConfirmId) {
       setError("Invalid banner ID");
@@ -294,7 +288,6 @@ const BannersTable = () => {
     }
   };
 
-  // Open modal for creating new banner
   const openCreateModal = () => {
     setIsEditMode(false);
     setCurrentBanner(null);
@@ -304,7 +297,6 @@ const BannersTable = () => {
     setUploadError(null);
   };
 
-  // Open modal for editing existing banner
   const openEditModal = (banner) => {
     if (!banner || !banner.id || !banner.name) {
       setError("Cannot edit invalid banner");
@@ -321,7 +313,6 @@ const BannersTable = () => {
     setUploadError(null);
   };
 
-  // Close modal
   const closeModal = () => {
     setIsModalOpen(false);
     setFormData({ name: "", imageUrl: "" });
@@ -331,7 +322,6 @@ const BannersTable = () => {
     setUploadError(null);
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isEditMode) {
@@ -341,7 +331,6 @@ const BannersTable = () => {
     }
   };
 
-  // Filter banners based on search term
   const filteredBanners = banners.filter(
     (banner) =>
       banner &&
@@ -351,7 +340,6 @@ const BannersTable = () => {
       banner.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Pagination logic
   const indexOfLastBanner = currentPage * bannersPerPage;
   const indexOfFirstBanner = indexOfLastBanner - bannersPerPage;
   const currentBanners = filteredBanners.slice(
@@ -360,7 +348,6 @@ const BannersTable = () => {
   );
   const totalPages = Math.ceil(filteredBanners.length / bannersPerPage);
 
-  // Table columns
   const columns = [
     { key: "index", label: "#", className: "p-3 sm:p-4" },
     {
@@ -382,7 +369,6 @@ const BannersTable = () => {
     { key: "actions", label: "Actions", className: "p-3 sm:p-4" },
   ];
 
-  // Render table row
   const renderRow = (banner, index) => (
     <tr
       key={banner.id}
@@ -545,11 +531,11 @@ const BannersTable = () => {
                   <p className="text-sm font-medium text-gray-600 mb-2">
                     Image Preview:
                   </p>
-                  <div className="relative group rounded-lg overflow-hidden shadow-sm">
+                  <div className="relative group rounded-lg shadow-sm">
                     <img
                       src={formData.imageUrl}
                       alt="Banner preview"
-                      className="w-full h-20 sm:h-24 object-cover"
+                      className="w-full max-h-64 object-contain aspect-auto"
                       onError={(e) => {
                         e.target.src = "https://picsum.photos/200";
                       }}

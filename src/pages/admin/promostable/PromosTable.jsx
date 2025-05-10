@@ -617,11 +617,11 @@ const PromosTable = () => {
                   <p className="text-sm font-medium text-gray-600 mb-2">
                     Image Preview:
                   </p>
-                  <div className="relative group rounded-lg overflow-hidden shadow-sm">
+                  <div className="relative group rounded-lg shadow-sm">
                     <img
                       src={previewImage}
                       alt="Promo preview"
-                      className="w-full h-20 sm:h-24 object-cover"
+                      className="w-full max-h-64 object-contain aspect-auto"
                     />
                   </div>
                 </div>

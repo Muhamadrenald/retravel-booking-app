@@ -24,11 +24,10 @@ const CategoriesTable = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-  const [uploadError, setUploadError] = useState(null); // New state for upload-specific errors
+  const [uploadError, setUploadError] = useState(null);
 
   const categoriesPerPage = 10;
 
-  // Fetch categories on component mount
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -84,7 +83,6 @@ const CategoriesTable = () => {
     }
   };
 
-  // Handle image upload
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -142,13 +140,11 @@ const CategoriesTable = () => {
     }
   };
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Create new category
   const createCategory = async () => {
     if (!formData.name.trim()) {
       setError("Category name is required");
@@ -195,7 +191,6 @@ const CategoriesTable = () => {
     }
   };
 
-  // Update existing category
   const updateCategory = async () => {
     if (!formData.name.trim() || !currentCategory) {
       setError("Category name is required");
@@ -244,7 +239,6 @@ const CategoriesTable = () => {
     }
   };
 
-  // Delete category
   const deleteCategory = async () => {
     if (!deleteConfirmId) {
       setError("Invalid category ID");
@@ -292,7 +286,6 @@ const CategoriesTable = () => {
     }
   };
 
-  // Open modal for creating new category
   const openCreateModal = () => {
     setIsEditMode(false);
     setCurrentCategory(null);
@@ -302,7 +295,6 @@ const CategoriesTable = () => {
     setUploadError(null);
   };
 
-  // Open modal for editing existing category
   const openEditModal = (category) => {
     if (!category || !category.id || !category.name) {
       setError("Cannot edit invalid category");
@@ -319,7 +311,6 @@ const CategoriesTable = () => {
     setUploadError(null);
   };
 
-  // Close modal
   const closeModal = () => {
     setIsModalOpen(false);
     setFormData({ name: "", imageUrl: "" });
@@ -329,7 +320,6 @@ const CategoriesTable = () => {
     setUploadError(null);
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isEditMode) {
@@ -339,7 +329,6 @@ const CategoriesTable = () => {
     }
   };
 
-  // Filter categories based on search term
   const filteredCategories = categories.filter(
     (category) =>
       category &&
@@ -349,7 +338,6 @@ const CategoriesTable = () => {
       category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Pagination logic
   const indexOfLastCategory = currentPage * categoriesPerPage;
   const indexOfFirstCategory = indexOfLastCategory - categoriesPerPage;
   const currentCategories = filteredCategories.slice(
@@ -358,7 +346,6 @@ const CategoriesTable = () => {
   );
   const totalPages = Math.ceil(filteredCategories.length / categoriesPerPage);
 
-  // Table columns
   const columns = [
     { key: "index", label: "#", className: "p-3 sm:p-4" },
     {
@@ -370,7 +357,6 @@ const CategoriesTable = () => {
     { key: "actions", label: "Actions", className: "p-3 sm:p-4" },
   ];
 
-  // Render table row
   const renderRow = (category, index) => (
     <tr
       key={category.id}
@@ -517,11 +503,11 @@ const CategoriesTable = () => {
                   <p className="text-sm font-medium text-gray-600 mb-2">
                     Image Preview:
                   </p>
-                  <div className="relative group rounded-lg overflow-hidden shadow-sm">
+                  <div className="relative group rounded-lg shadow-sm">
                     <img
                       src={formData.imageUrl}
                       alt="Category preview"
-                      className="w-full h-20 sm:h-24 object-cover"
+                      className="w-full max-h-64 object-contain aspect-auto"
                       onError={(e) => {
                         e.target.src = "https://picsum.photos/200";
                       }}

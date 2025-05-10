@@ -14,11 +14,34 @@ const Profile = () => {
     name: "",
     email: "",
     phoneNumber: "",
+    role: "",
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Determine if user is admin for success message
+  const isAdmin = user?.role === "admin";
+
+  // Define labels for all users
+  const labels = {
+    title: "My Profile",
+    subtitle: "Manage your profile information",
+    name: "Name",
+    email: "Email",
+    phoneNumber: "Phone Number",
+    role: "Role",
+    editButton: "Edit Profile",
+    modalTitle: "Edit Profile",
+    submitButton: "Save Changes",
+    cancelButton: "Cancel",
+    profilePicture: "Profile Picture",
+    deletePicture: "Delete Profile Picture",
+    noDataTitle: "No profile data",
+    noDataMessage: "Please login to view your profile",
+    loginButton: "Login",
+  };
 
   // Fetch current user data
   useEffect(() => {
@@ -26,7 +49,7 @@ const Profile = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("Please log in to view your profile.");
+        if (!token) throw new Error(labels.noDataMessage);
 
         const response = await axios.get(
           `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CURRENT_USER}`,
@@ -40,11 +63,23 @@ const Profile = () => {
 
         if (response.data?.code === "200") {
           const userData = response.data.data;
+          console.log("User data:", userData); // Debug: Check API data
+          // Validate role
+          const validRoles = ["user", "admin"];
+          if (!userData.role || !validRoles.includes(userData.role)) {
+            console.warn(
+              `Invalid or missing role: ${
+                userData.role || "none"
+              }. Defaulting to 'user'.`
+            );
+            userData.role = "user";
+          }
           setUser(userData);
           setFormData({
             name: userData.name || "",
             email: userData.email || "",
             phoneNumber: userData.phoneNumber || "",
+            role: userData.role,
           });
         } else {
           throw new Error(
@@ -58,7 +93,7 @@ const Profile = () => {
           if (err.response.status === 401) {
             localStorage.removeItem("token");
             window.location.href = "/login";
-            errorMessage = "Session expired. Please log in again.";
+            errorMessage = "Session expired. Please login again.";
           } else if (err.response.status === 404) {
             errorMessage = "User endpoint not found.";
           } else {
@@ -75,11 +110,12 @@ const Profile = () => {
     };
 
     fetchUser();
-  }, []);
+  }, [labels.noDataMessage]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(`Input changed: ${name} = ${value}`); // Debug: Log input changes
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -109,13 +145,13 @@ const Profile = () => {
 
       const token = localStorage.getItem("token");
       if (!token)
-        throw new Error("Please log in to delete your profile picture.");
+        throw new Error("Please login to delete your profile picture.");
 
       const updateData = {
         name: formData.name,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
-        profilePictureUrl: "", // Set to empty to remove profile picture
+        profilePictureUrl: "",
       };
 
       const response = await axios.post(
@@ -148,7 +184,7 @@ const Profile = () => {
         if (err.response.status === 401) {
           localStorage.removeItem("token");
           window.location.href = "/login";
-          errorMessage = "Session expired. Please log in again.";
+          errorMessage = "Session expired. Please login again.";
         } else if (err.response.status === 400) {
           errorMessage = err.response.data.message || "Invalid data.";
         } else if (err.response.status === 404) {
@@ -165,7 +201,7 @@ const Profile = () => {
     }
   };
 
-  // Handle form submission to update profile
+  // Handle form submission to update profile and role
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -174,7 +210,10 @@ const Profile = () => {
       setSuccessMessage(null);
 
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("Please log in to update your profile.");
+      if (!token) throw new Error("Please login to update your profile.");
+      if (!user?.id) throw new Error("User ID not found.");
+
+      console.log("Submitting form with data:", formData); // Debug: Log form data
 
       let profilePictureUrl = user?.profilePictureUrl || "";
       if (selectedFile) {
@@ -206,6 +245,7 @@ const Profile = () => {
         }
       }
 
+      // Update profile data
       const updateData = {
         name: formData.name,
         email: formData.email,
@@ -213,7 +253,9 @@ const Profile = () => {
         profilePictureUrl,
       };
 
-      const response = await axios.post(
+      console.log("Updating profile with:", updateData); // Debug: Log profile update data
+
+      const profileResponse = await axios.post(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPDATE_PROFILE}`,
         updateData,
         {
@@ -225,16 +267,67 @@ const Profile = () => {
         }
       );
 
-      if (response.data?.code === "200") {
-        setUser((prev) => ({ ...prev, ...updateData }));
-        setSuccessMessage("Profile updated successfully!");
-        setIsModalOpen(false);
-        setSelectedFile(null);
-        setPreviewUrl(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      } else {
-        throw new Error(response.data.message || "Failed to update profile.");
+      if (profileResponse.data?.code !== "200") {
+        throw new Error(
+          profileResponse.data.message || "Failed to update profile."
+        );
       }
+
+      // Update role if role has changed
+      let roleUpdated = false;
+      if (formData.role !== user?.role) {
+        console.log("Attempting to update role to:", formData.role); // Debug: Log role update attempt
+        console.log(
+          "Role update endpoint:",
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPDATE_USER_ROLE(
+            user.id
+          )}`
+        ); // Debug: Log endpoint
+        console.log("Role update payload:", {
+          user_id: user.id,
+          role: formData.role,
+        }); // Debug: Log payload
+
+        const roleResponse = await axios.post(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPDATE_USER_ROLE(
+            user.id
+          )}`,
+          { user_id: user.id, role: formData.role },
+          {
+            headers: {
+              apiKey: API_CONFIG.API_KEY,
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("Role update response:", roleResponse.data); // Debug: Log role update response
+
+        if (roleResponse.data?.code === "200") {
+          roleUpdated = true;
+        } else {
+          throw new Error(
+            roleResponse.data.message || "Failed to update role."
+          );
+        }
+      }
+
+      // Update user state
+      setUser((prev) => ({
+        ...prev,
+        ...updateData,
+        role: formData.role,
+      }));
+      setSuccessMessage(
+        roleUpdated
+          ? "Profile and role updated successfully!"
+          : "Profile updated successfully!"
+      );
+      setIsModalOpen(false);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
       console.error("Error updating profile:", err);
       let errorMessage = "Failed to update profile.";
@@ -242,11 +335,11 @@ const Profile = () => {
         if (err.response.status === 401) {
           localStorage.removeItem("token");
           window.location.href = "/login";
-          errorMessage = "Session expired. Please log in again.";
+          errorMessage = "Session expired. Please login again.";
         } else if (err.response.status === 400) {
           errorMessage = err.response.data.message || "Invalid data.";
         } else if (err.response.status === 404) {
-          errorMessage = "Profile update endpoint not found.";
+          errorMessage = "Profile or role update endpoint not found.";
         } else {
           errorMessage = err.response.data.message || "An error occurred.";
         }
@@ -274,14 +367,18 @@ const Profile = () => {
     };
   }, [previewUrl]);
 
+  // Format role for display
+  const formatRole = (role) =>
+    role ? role.charAt(0).toUpperCase() + role.slice(1) : "Not available";
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 bg-gray-50 min-h-screen font-sans">
       <div className="bg-white shadow-lg rounded-lg p-6">
         <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-4">
-          My Profile
+          {labels.title}
         </h1>
         <p className="text-gray-600 mb-6 text-sm sm:text-base">
-          Manage your profile information
+          {labels.subtitle}
         </p>
 
         {successMessage && (
@@ -300,18 +397,21 @@ const Profile = () => {
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
           </div>
         ) : !user ? (
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center shadow-sm">
+          <div
+            className="bg-white border border-gray-200 rounded-lg p-8 text-center shadow-sm
+"
+          >
             <h2 className="text-xl font-medium text-gray-900 mb-2">
-              No profile data
+              {labels.noDataTitle}
             </h2>
             <p className="text-gray-500 mb-4 text-sm sm:text-base">
-              Please log in to view your profile
+              {labels.noDataMessage}
             </p>
             <a
               href="/login"
               className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm"
             >
-              Log In
+              {labels.loginButton}
             </a>
           </div>
         ) : (
@@ -330,21 +430,29 @@ const Profile = () => {
               <div className="flex-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Name</p>
+                    <p className="text-sm text-gray-600">{labels.name}</p>
                     <p className="text-lg font-medium text-gray-900">
                       {user.name || "Not available"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="text-sm text-gray-600">{labels.email}</p>
                     <p className="text-lg font-medium text-gray-900">
                       {user.email || "Not available"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Phone Number</p>
+                    <p className="text-sm text-gray-600">
+                      {labels.phoneNumber}
+                    </p>
                     <p className="text-lg font-medium text-gray-900">
                       {user.phoneNumber || "Not available"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">{labels.role}</p>
+                    <p className="text-lg font-medium text-gray-900">
+                      {formatRole(user.role)}
                     </p>
                   </div>
                 </div>
@@ -352,7 +460,7 @@ const Profile = () => {
                   onClick={() => setIsModalOpen(true)}
                   className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  Edit Profile
+                  {labels.editButton}
                 </button>
               </div>
             </div>
@@ -361,7 +469,7 @@ const Profile = () => {
 
         <Modal
           isOpen={isModalOpen}
-          title="Edit Profile"
+          title={labels.modalTitle}
           onClose={() => {
             setIsModalOpen(false);
             setSelectedFile(null);
@@ -370,7 +478,7 @@ const Profile = () => {
           }}
           onSubmit={handleSubmit}
           isLoading={isSubmitting}
-          submitText="Save Changes"
+          submitText={labels.submitButton}
         >
           <div className="space-y-6">
             <div>
@@ -378,7 +486,7 @@ const Profile = () => {
                 htmlFor="name"
                 className="block text-base font-medium text-gray-900"
               >
-                Name
+                {labels.name}
               </label>
               <input
                 type="text"
@@ -395,7 +503,7 @@ const Profile = () => {
                 htmlFor="email"
                 className="block text-base font-medium text-gray-900"
               >
-                Email
+                {labels.email}
               </label>
               <input
                 type="email"
@@ -412,7 +520,7 @@ const Profile = () => {
                 htmlFor="phoneNumber"
                 className="block text-base font-medium text-gray-900"
               >
-                Phone Number
+                {labels.phoneNumber}
               </label>
               <input
                 type="tel"
@@ -426,17 +534,35 @@ const Profile = () => {
             </div>
             <div>
               <label
+                htmlFor="role"
+                className="block text-base font-medium text-gray-900"
+              >
+                {labels.role}
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                className="mt-1 block w-full h-12 rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div>
+              <label
                 htmlFor="profilePicture"
                 className="block text-base font-medium text-gray-900"
               >
-                Profile Picture
+                {labels.profilePicture}
               </label>
               {previewUrl && (
-                <div className="mt-2">
+                <div className="mt-2 rounded-lg shadow-sm">
                   <img
                     src={previewUrl}
                     alt="Profile Picture Preview"
-                    className="w-32 h-32 object-cover rounded-full border border-gray-200"
+                    className="w-full max-h-64 object-contain aspect-auto rounded-lg border border-gray-200"
                   />
                 </div>
               )}
@@ -455,7 +581,7 @@ const Profile = () => {
                   className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg text-base font-medium hover:bg-red-700 transition-all duration-200 disabled:opacity-50"
                   disabled={isSubmitting}
                 >
-                  Delete Profile Picture
+                  {labels.deletePicture}
                 </button>
               )}
             </div>
