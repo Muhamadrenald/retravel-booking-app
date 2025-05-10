@@ -92,7 +92,7 @@ const Profile = () => {
         if (err.response) {
           if (err.response.status === 401) {
             localStorage.removeItem("token");
-            window.location.href = "/login";
+            // window.location.href = "/login";
             errorMessage = "Session expired. Please login again.";
           } else if (err.response.status === 404) {
             errorMessage = "User endpoint not found.";
@@ -334,7 +334,7 @@ const Profile = () => {
       if (err.response) {
         if (err.response.status === 401) {
           localStorage.removeItem("token");
-          window.location.href = "/login";
+          // window.location.href = "/login";
           errorMessage = "Session expired. Please login again.";
         } else if (err.response.status === 400) {
           errorMessage = err.response.data.message || "Invalid data.";
@@ -372,221 +372,227 @@ const Profile = () => {
     role ? role.charAt(0).toUpperCase() + role.slice(1) : "Not available";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 bg-gray-50 min-h-screen font-sans">
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-4">
-          {labels.title}
-        </h1>
-        <p className="text-gray-600 mb-6 text-sm sm:text-base">
-          {labels.subtitle}
-        </p>
+    <div className="min-h-screen bg-gray-100 font-sans">
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
+        <div className="bg-white shadow-md rounded-xl p-4 sm:p-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
+            {labels.title}
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">
+            {labels.subtitle}
+          </p>
 
-        {successMessage && (
-          <Alert
-            type="success"
-            message={successMessage}
-            onClose={clearMessages}
-          />
-        )}
-        {error && (
-          <Alert type="error" message={error} onClose={clearMessages} />
-        )}
+          {successMessage && (
+            <Alert
+              type="success"
+              message={successMessage}
+              onClose={clearMessages}
+            />
+          )}
+          {error && (
+            <Alert type="error" message={error} onClose={clearMessages} />
+          )}
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
-          </div>
-        ) : !user ? (
-          <div
-            className="bg-white border border-gray-200 rounded-lg p-8 text-center shadow-sm
-"
-          >
-            <h2 className="text-xl font-medium text-gray-900 mb-2">
-              {labels.noDataTitle}
-            </h2>
-            <p className="text-gray-500 mb-4 text-sm sm:text-base">
-              {labels.noDataMessage}
-            </p>
-            <a
-              href="/login"
-              className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm"
-            >
-              {labels.loginButton}
-            </a>
-          </div>
-        ) : (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0">
-                <img
-                  src={user.profilePictureUrl || "https://picsum.photos/200"}
-                  alt="Profile Picture"
-                  className="w-full h-full object-cover rounded-full border border-gray-200"
-                  onError={(e) => {
-                    e.target.src = "https://picsum.photos/200";
-                  }}
-                />
-              </div>
-              <div className="flex-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">{labels.name}</p>
-                    <p className="text-lg font-medium text-gray-900">
-                      {user.name || "Not available"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">{labels.email}</p>
-                    <p className="text-lg font-medium text-gray-900">
-                      {user.email || "Not available"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      {labels.phoneNumber}
-                    </p>
-                    <p className="text-lg font-medium text-gray-900">
-                      {user.phoneNumber || "Not available"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">{labels.role}</p>
-                    <p className="text-lg font-medium text-gray-900">
-                      {formatRole(user.role)}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
-                >
-                  {labels.editButton}
-                </button>
-              </div>
+          {loading ? (
+            <div className="flex justify-center items-center h-48 sm:h-64">
+              <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 border-t-2 border-b-2 border-blue-600"></div>
             </div>
-          </div>
-        )}
-
-        <Modal
-          isOpen={isModalOpen}
-          title={labels.modalTitle}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedFile(null);
-            setPreviewUrl(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-          }}
-          onSubmit={handleSubmit}
-          isLoading={isSubmitting}
-          submitText={labels.submitButton}
-        >
-          <div className="space-y-6">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-base font-medium text-gray-900"
+          ) : !user ? (
+            <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 text-center shadow-sm">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+                {labels.noDataTitle}
+              </h2>
+              <p className="text-gray-500 mb-4 text-sm sm:text-base">
+                {labels.noDataMessage}
+              </p>
+              <a
+                href="/login"
+                className="inline-block px-5 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm sm:text-base font-medium shadow-sm"
               >
-                {labels.name}
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="mt-1 block w-full h-12 rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
-                required
-              />
+                {labels.loginButton}
+              </a>
             </div>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-base font-medium text-gray-900"
-              >
-                {labels.email}
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="mt-1 block w-full h-12 rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="phoneNumber"
-                className="block text-base font-medium text-gray-900"
-              >
-                {labels.phoneNumber}
-              </label>
-              <input
-                type="tel"
-                id="phoneNumber"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                className="mt-1 block w-full h-12 rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
-                placeholder="Example: +6281234567890"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="role"
-                className="block text-base font-medium text-gray-900"
-              >
-                {labels.role}
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="mt-1 block w-full h-12 rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="profilePicture"
-                className="block text-base font-medium text-gray-900"
-              >
-                {labels.profilePicture}
-              </label>
-              {previewUrl && (
-                <div className="mt-2 rounded-lg shadow-sm">
+          ) : (
+            <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
+              <div className="flex flex-col items-center sm:flex-row sm:items-start gap-4 sm:gap-6">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 flex-shrink-0">
                   <img
-                    src={previewUrl}
-                    alt="Profile Picture Preview"
-                    className="w-full max-h-64 object-contain aspect-auto rounded-lg border border-gray-200"
+                    src={user.profilePictureUrl || "https://picsum.photos/200"}
+                    alt="Profile Picture"
+                    className="w-full h-full object-cover rounded-full border border-gray-200"
+                    onError={(e) => {
+                      e.target.src = "https://picsum.photos/200";
+                    }}
                   />
                 </div>
-              )}
-              <input
-                type="file"
-                id="profilePicture"
-                accept="image/*"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                className="mt-2 block w-full text-base text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-base file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-              {user?.profilePictureUrl && (
-                <button
-                  type="button"
-                  onClick={handleDeletePicture}
-                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg text-base font-medium hover:bg-red-700 transition-all duration-200 disabled:opacity-50"
-                  disabled={isSubmitting}
-                >
-                  {labels.deletePicture}
-                </button>
-              )}
+                <div className="flex-1 w-full">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                    <div className="overflow-hidden">
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {labels.name}
+                      </p>
+                      <p className="text-base sm:text-lg font-medium text-gray-900 break-words">
+                        {user.name || "Not available"}
+                      </p>
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {labels.email}
+                      </p>
+                      <p className="text-base sm:text-lg font-medium text-gray-900 break-words">
+                        {user.email || "Not available"}
+                      </p>
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {labels.phoneNumber}
+                      </p>
+                      <p className="text-base sm:text-lg font-medium text-gray-900 break-words">
+                        {user.phoneNumber || "Not available"}
+                      </p>
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {labels.role}
+                      </p>
+                      <p className="text-base sm:text-lg font-medium text-gray-900 break-words">
+                        {formatRole(user.role)}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="mt-4 sm:mt-6 px-4 py-2 sm:px-5 sm:py-2.5 bg-blue-600 text-white rounded-lg text-sm sm:text-base font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto"
+                  >
+                    {labels.editButton}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </Modal>
+          )}
+
+          <Modal
+            isOpen={isModalOpen}
+            title={labels.modalTitle}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedFile(null);
+              setPreviewUrl(null);
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
+            onSubmit={handleSubmit}
+            isLoading={isSubmitting}
+            submitText={labels.submitButton}
+          >
+            <div className="space-y-4 sm:space-y-6">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm sm:text-base font-medium text-gray-900"
+                >
+                  {labels.name}
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full h-10 sm:h-12 rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-3 break-words"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm sm:text-base font-medium text-gray-900"
+                >
+                  {labels.email}
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full h-10 sm:h-12 rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-3 break-words"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="phoneNumber"
+                  className="block text-sm sm:text-base font-medium text-gray-900"
+                >
+                  {labels.phoneNumber}
+                </label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full h-10 sm:h-12 rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-3 break-words"
+                  placeholder="Example: +6281234567890"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm sm:text-base font-medium text-gray-900"
+                >
+                  {labels.role}
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  disabled={user?.role !== "admin"}
+                  className="mt-1 block w-full h-10 sm:h-12 rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-3 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="profilePicture"
+                  className="block text-sm sm:text-base font-medium text-gray-900"
+                >
+                  {labels.profilePicture}
+                </label>
+                {previewUrl && (
+                  <div className="mt-2 rounded-lg shadow-sm">
+                    <img
+                      src={previewUrl}
+                      alt="Profile Picture Preview"
+                      className="w-full max-h-48 sm:max-h-64 object-contain rounded-lg border border-gray-200"
+                    />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="profilePicture"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  className="mt-2 block w-full text-sm sm:text-base text-gray-500 file:mr-3 file:py-2 file:px-3 sm:file:mr-4 sm:file:py-2 sm:file:px-4 file:rounded-lg file:border-0 file:text-sm sm:file:text-base file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {user?.profilePictureUrl && (
+                  <button
+                    type="button"
+                    onClick={handleDeletePicture}
+                    className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm sm:text-base font-medium hover:bg-red-700 transition-all duration-200 disabled:opacity-50 w-full sm:w-auto"
+                    disabled={isSubmitting}
+                  >
+                    {labels.deletePicture}
+                  </button>
+                )}
+              </div>
+            </div>
+          </Modal>
+        </div>
       </div>
     </div>
   );
