@@ -19,6 +19,21 @@ export default function Checkout() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumberError, setPhoneNumberError] = useState("");
+
+  // Handle phone number input with validation
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value;
+
+    // Check if input contains only digits
+    if (value === "" || /^\d*$/.test(value)) {
+      setPhoneNumber(value);
+      setPhoneNumberError("");
+    } else {
+      // Show error without changing the value
+      setPhoneNumberError("Phone number must contain numbers only");
+    }
+  };
 
   // Validate contact information (promo code is optional)
   const isContactInfoValid = () => {
@@ -32,7 +47,8 @@ export default function Checkout() {
       email &&
       emailRegex.test(email) &&
       phoneNumber &&
-      phoneRegex.test(phoneNumber)
+      phoneRegex.test(phoneNumber) &&
+      !phoneNumberError // No validation errors
     );
   };
 
@@ -321,7 +337,17 @@ export default function Checkout() {
         setIsProcessing(false);
         return;
       }
-      if (!phoneNumber || !/^\d{8,}$/.test(phoneNumber)) {
+      if (!phoneNumber) {
+        alert("Please enter a phone number.");
+        setIsProcessing(false);
+        return;
+      }
+      if (phoneNumberError) {
+        alert(phoneNumberError);
+        setIsProcessing(false);
+        return;
+      }
+      if (!/^\d{8,}$/.test(phoneNumber)) {
         alert("Please enter a valid phone number (minimum 8 digits).");
         setIsProcessing(false);
         return;
@@ -496,15 +522,21 @@ export default function Checkout() {
                 <input
                   type="text"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onChange={handlePhoneNumberChange}
                   placeholder="12345678"
-                  className="flex-grow border border-gray-300 rounded-r-md p-2 text-sm border-l-0 focus:ring-2 focus:ring-blue-500"
+                  className={`flex-grow border border-gray-300 rounded-r-md p-2 text-sm border-l-0 focus:ring-2 focus:ring-blue-500 ${
+                    phoneNumberError ? "border-red-500" : ""
+                  }`}
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Example: +6212345678, for Country Code (+62) and Mobile No.
-                12345678
-              </p>
+              {phoneNumberError ? (
+                <p className="text-xs text-red-500 mt-1">{phoneNumberError}</p>
+              ) : (
+                <p className="text-xs text-gray-500 mt-1">
+                  Example: +6212345678, for Country Code (+62) and Mobile No.
+                  12345678. Numbers only.
+                </p>
+              )}
             </div>
 
             <div className="mb-4">
@@ -771,12 +803,12 @@ export default function Checkout() {
                     <div className="space-y-2">
                       {item.bookingDate && (
                         <div className="flex items-center text-gray-500 text-xs">
-                          <Calendar size={14} className="mr-1" />
+                          <Calendar size="14" className="mr-1" />
                           <span>{formatDateRange(item.bookingDate)}</span>
                         </div>
                       )}
                       <div className="flex items-center text-gray-500 text-xs">
-                        <Users size={14} className="mr-1" />
+                        <Users size="14" className="mr-1" />
                         <span>{item.quantity || 1} ticket(s)</span>
                       </div>
                       <div className="flex justify-between text-sm">

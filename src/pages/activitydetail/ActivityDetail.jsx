@@ -443,9 +443,9 @@ function ActivityDetail() {
                         <div className="flex items-center justify-between mb-4">
                           <span className="text-gray-600">Starting from</span>
                           <div className="flex flex-col items-end">
-                            {activity.originalPrice && (
+                            {activity.price && (
                               <span className="text-sm text-gray-500 line-through">
-                                {formatCurrency(activity.originalPrice)}
+                                {formatCurrency(activity.price)}
                               </span>
                             )}
                             <span className="text-2xl font-bold text-teal-600">
@@ -453,19 +453,17 @@ function ActivityDetail() {
                                 activity.priceDiscount || activity.price
                               )}
                             </span>
-                            {activity.originalPrice &&
-                              activity.priceDiscount && (
-                                <span className="text-xs text-teal-600 font-medium bg-teal-50 px-2 py-1 rounded-full mt-1">
-                                  Save{" "}
-                                  {Math.round(
-                                    (1 -
-                                      activity.priceDiscount /
-                                        activity.originalPrice) *
-                                      100
-                                  )}
-                                  %
-                                </span>
-                              )}
+                            {activity.price && activity.priceDiscount && (
+                              <span className="text-xs text-teal-600 font-medium bg-teal-50 px-2 py-1 rounded-full mt-1">
+                                Save{" "}
+                                {Math.round(
+                                  (1 -
+                                    activity.priceDiscount / activity.price) *
+                                    100
+                                )}
+                                %
+                              </span>
+                            )}
                           </div>
                         </div>
                         <button
