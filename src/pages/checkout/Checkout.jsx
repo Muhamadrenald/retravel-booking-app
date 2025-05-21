@@ -417,7 +417,7 @@ export default function Checkout() {
           alert(
             "Transaction created successfully. You will be redirected to the transactions page."
           );
-          window.location.href = "/transactions";
+          window.location.href = "/transaction";
         }, 1000);
       } else {
         throw new Error(
